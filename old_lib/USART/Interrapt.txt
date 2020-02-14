@@ -1,0 +1,142 @@
+uint8_t CounterUSART2RX;      //Счётчик кол-ва принятых байт, USART2
+uint16_t CounterUSART2TX;       //Счётчик кол-ва переданных байт, USART2
+uint16_t ByteNumberUSART2TX;  //Кол-во передаваемых байт, USART2
+uint8_t *Pointer_8;
+
+
+//**********************************************************************************************************************************
+//Обработчик прерывания от USART2 (события)		
+void USART2_IRQHandler(void) 
+{
+  uint8_t ReadWriteBuffer;
+ 
+  if (getUSART2RXDataRegisterNotEmpty())                                       //Приёмный регистр не пуст
+    {  
+      ReadWriteBuffer = USART2DataRegister;                                            //Прочесть значение регистра приёмника, сброс флага события "приёмный регистр не пуст"
+      if (!FlagRXComplete)                                                     //Проверка флага "данные приняты" / "приёмный буфер занят" 
+      {
+      //Добавить проверку флага "данные успешно приняты" / "приёмный буфер занят" 
+      //предохраняет от затирания буфера приёма, если действия с его данными длятся большой промежуток времени
+      switch(FlagAddressCompare)
+          {
+						case 0: Pointer_8 = (uint8_t *)& HeadTransferUSART2;               //Определение адреса буфера для приёма заголовка
+										Pointer_8 = Pointer_8 + CounterUSART2RX;                   //Сложить адрес буфера с необходимым смещением
+										(*Pointer_8) = ReadWriteBuffer;                            //Записать данные по получившемуся адресу
+										CounterUSART2RX++;    
+										if (CounterUSART2RX == 5)                                  //Если весь заголовок принят
+											{
+												FlagAddressCompare = 1;
+												CounterUSART2RX = 0;
+											}	 
+										break;   
+
+					  case 1:	 
+										if (HeadTransferUSART2.Address == AddressPCB)
+											{
+												if (HeadTransferUSART2.DataSizeLow == 0)
+													{
+														HeadTransferUSART2.CRC8 = ReadWriteBuffer;									//Записать данные по получившемуся адресу 
+														CounterTimeOut = 0;                                        	//Сброс счётчика тайм аута 
+														FlagAddressCompare = 0;                                    	//Сбросить флаг совпадения адреса/выбора
+														FlagRXTimeOut = 0;                                         	//Отключение таймера таймаута приёма                                 
+														FlagRXComplete = 1;                                        	//Установить флаг "данные приняты" / "приёмный буфер занят"
+													}
+												else
+													{
+														DataIn[0] = ReadWriteBuffer;
+														FlagAddressCompare = 3; 
+														CounterUSART2RX = 1;
+													}
+											}
+										else
+											{
+												CounterUSART2RX = 0;																		//Сбросить счётчик принятых байт данных
+												CounterTimeOut = 0;                                   	//Сброс счётчика тайм аута 
+												FlagAddressCompare = 0;                               	//Сбросить флаг совпадения адреса/выбора
+												FlagRXTimeOut = 0;                                    	//Отключение таймера таймаута приёма                                 
+												FlagRXComplete = 0;                                   	//Сброс флага "данные приняты" / "приёмный буфер занят"
+											} 
+										break; 
+         
+            case 3: Pointer_8 = (uint8_t *)& DataIn;                             //Определение адреса буфера для приёма данных
+                    Pointer_8 = Pointer_8 + CounterUSART2RX;                     //Сложить адрес буфера с необходимым смещением
+                    (*Pointer_8) = ReadWriteBuffer;                              //Записать данные по получившемуся адресу
+                    CounterUSART2RX++; 
+                    if (CounterUSART2RX == HeadTransferUSART2.DataSizeLow+1)     //Данные + CRC
+                      {
+                        HeadTransferUSART2.CRC8 = ReadWriteBuffer;
+                        CounterUSART2RX = 0;                                     //Сбросить счётчик принятых байт данных
+                        CounterTimeOut = 0;                                      //Сброс счётчика тайм аута
+                        FlagAddressCompare = 0;                                  //Сбросить флаг совпадения адреса/выбора                         
+                        FlagRXTimeOut = 0;                                       //Отключение таймера таймаута приёма
+                        FlagRXComplete = 1;                                      //Установить флаг "данные приняты" / "приёмный буфер занят"
+                      }  
+                    break; 
+                       
+            default: __NOP();                                                     //Выход во всех остальных случаях, ошибка выбора действия
+          }  
+      } 
+                                                                                  //Сброс флага по событию "передающий буфер пуст" 
+    }
+
+  if (getUSART2TXDataRegisterEmpty()&&getUSART2TXIOn())                          //Передающий регистр пуст
+    {  
+      Pointer_8 = (uint8_t *)& DataOut;                                           //Определение адреса буфера для приёма данных
+      Pointer_8 = Pointer_8 + CounterUSART2TX;                                    //Сложить адрес буфера с необходимым смещением
+      USART2DataRegister = (*Pointer_8);                                          //Записать передаваемый байт в регистр данных, сброс флага события "передающий буфер пуст" 
+      CounterUSART2TX++;  
+      if (CounterUSART2TX == ByteNumberUSART2TX)
+        {
+          USART2TXEInterruptDisable();                                            //Выключить прерывание по событию "передающий регистр данных пуст", USART2
+          CounterUSART2TX = 0;
+          FlagTXComplete = 0;                                                     //Сбросить флаг "данные отправлены" / "передающий буфер занят"  
+					DelayTimer->CR1 |= TIM_CR1_CEN;	            						  							//Включить таймер
+        } 
+    }
+    
+//  if (getUSART2TransmissionComplete()&&(!getUSART2TXIOn()))                                           //Проверить флаг "передатчик готов к работе"
+//    {
+//      //RS422TXDisable;                                                         //
+//      //USART2TransmitterDisable();                                             //Выключить передатчик
+//    }  
+    
+  if (getUSART2OverrunError())                                                    //Ошибка перезаписи данных
+    {
+      
+    }
+ 
+}	
+
+
+
+uint8_t CounterUSART2RX;            //Счётчик кол-ва принятых байт, USART2
+uint16_t CounterUSART2TX;           //Счётчик кол-ва переданных байт, USART2
+uint16_t ByteNumberUSART2TX;        //Кол-во передаваемых байт, USART2
+uint8_t TxBufferUart2[14];
+uint8_t FlagUsart2RXComplete;       //Флаг "данные приняты" / "приёмный буфер занят"
+uint8_t FlagUsart2TXComplete;       //Флаг "данные отправлены" / "передающий буфер занят"
+uint8_t *USART2TxPointer_8;
+
+
+//**********************************************************************************************************************************
+//Обработчик прерывания от USART2 (события)		
+void USART2_IRQHandler(void) 
+{
+  //uint8_t ReadWriteBuffer;
+
+  if (getUSART2TXDataRegisterEmpty()&&getUSART2TXIOn())                         //Передающий регистр пуст
+    {  
+      USART2TxPointer_8 = (uint8_t *)& TxBufferUart2[ID];                       //Определение адреса буфера для приёма данных
+      USART2TxPointer_8 = USART2TxPointer_8 + CounterUSART2TX;                  //Сложить адрес буфера с необходимым смещением
+      USART2DataRegister = (*USART2TxPointer_8);                                //Записать передаваемый байт в регистр данных, сброс флага события "передающий буфер пуст" 
+      CounterUSART2TX++;  
+      if (CounterUSART2TX == ByteNumberUSART2TX)
+        {
+          USART2TXEInterruptDisable();                                          //Выключить прерывание по событию "передающий регистр данных пуст", USART2
+          CounterUSART2TX = 0;
+          FlagUsart2TXComplete = 0;                                             //Сбросить флаг "данные отправлены" / "передающий буфер занят"  
+					//DelayTimer->CR1 |= TIM_CR1_CEN;	            						  					//Включить таймер
+        } 
+    }
+
+}	

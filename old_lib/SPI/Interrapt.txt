@@ -1,0 +1,18 @@
+//**********************************************************************************************************************************
+//Обработчик прерывания от SPI1 		
+void SPI1_IRQHandler(void) 
+{
+  if (getSPITXBufferEmpty()&&getSPITXIBufferEmpty())
+    {
+      SPI1->DR = DACConfig();//Запись подготовленных данных ЦАП в регистр передачи SPI1 и сброс флага события "передающий буфер пуст"
+      CounterTXSPI1++;
+      if (CounterTXSPI1 == 1)
+        {
+          SPI1TXEInterruptDisable();
+          CounterTXSPI1 = 0;
+					//DisableDAC_XY;
+          //SPI1Disable(); 
+					FlagDacDisable = 1;
+        }
+    }
+}	

@@ -1,0 +1,87 @@
+;.equ set_init=0b00000011
+.equ SLAVE_ADDR_DS3231=0b11010000   ;адрес ведомой RTC DS3231
+.equ SLAVE_ADDR_DS1307=0b11010000   ;адрес ведомой RTC DS1307
+
+.equ SLA_W=0b00000000               ;режим записи, передача данных ведомому (приём ACK после приёма каждого байта)
+.equ SLA_R=0b00000001               ;режим чтения, приём данных от ведомого (передача ACK после приёма каждого байта)
+
+;*******************************************************************************************
+;Регистры DS3231
+.equ SECONDS_DS3231=0x00            ;адрес регистр секунд
+.equ MINUTES_DS3231=0x01            ;адрес регистр минут    
+.equ HOURS_DS3231=0x02              ;адрес регистр часов    
+.equ DAY_DS3231=0x03                ;адрес регистр день
+.equ DATE_DS3231=0x04               ;адрес регистр дата 
+.equ MONTH_DS3231=0x05              ;адрес регистр месяц, век 
+.equ YEAR_DS3231=0x06               ;адрес регистр год
+.equ ALARM1_SECONDS_DS3231=0x07     ;адрес регистр будильник 1 секунды
+.equ ALARM1_MINUTES_DS3231=0x08     ;адрес регистр будильник 1 минуты
+.equ ALARM1_HOURS_DS3231=0x09       ;адрес регистр будильник 1 часы
+.equ ALARM1_DAYDATE_DS3231=0x0A     ;адрес регистр будильник 1 день, дата
+.equ ALARM2_MINUTES_DS3231=0x0B     ;адрес регистр будильник 2 минуты
+.equ ALARM2_HOUR_DS3231=0x0C        ;адрес регистр будильник 2 часы
+.equ ALARM2_DAYDATE_DS3231=0x0D     ;адрес регистр будильник 2 день, дата
+.equ CONTROL_DS3231=0x0E            ;адрес регистр управление
+.equ CONTROL_STATUS_DS3231=0x0F     ;адрес регистр управление, статус
+.equ AGING_OFFSET_DS3231=0x10       ;адрес регистр старение!?
+.equ MSBTEMP_DS3231=0x11            ;адрес регистр 
+.equ LSBTEMP_DS3231=0x12            ;адрес регистр
+
+;*******************************************************************************************
+;Биты регистра управления (Control)
+.equ A1IE   = 0
+.equ A2IE   = 1
+.equ INTCH  = 2
+.equ RS1    = 3
+.equ RS2    = 4
+.equ CONV   = 5
+.equ BBSQW  = 6
+.equ EOSC   = 7
+
+;*******************************************************************************************
+;Биты регистра управления и статуса (Control/Status)
+.equ A1F    = 0
+.equ A2F    = 1
+.equ BSY    = 2
+.equ EN32kHz= 3
+.equ OSF    = 7
+
+;*******************************************************************************************
+;Регистры DS1307
+.equ SECONDS_DS1307=0x00            ;адрес регистр секунд
+.equ MINUTES_DS1307=0x01            ;адрес регистр минут    
+.equ HOURS_DS1307=0x02              ;адрес регистр часов    
+.equ DAY_DS1307=0x03                ;адрес регистр день
+.equ DATE_DS1307=0x04               ;адрес регистр дата 
+.equ MONTH_DS1307=0x05              ;адрес регистр месяц 
+.equ YEAR_DS1307=0x06               ;адрес регистр год
+.equ CONTROL_DS1307=0x07            ;адрес регистр управления
+.equ RAM_START_DS1307=0x08          ;адрес стартойвый адрес ОЗУ
+.equ RAM_END_DS1307=0x3F            ;адрес конечный адрес ОЗУ
+
+;*******************************************************************************************
+;Биты регистра управления (Control)
+.equ RS0_DS1307 = 0
+.equ RS1_DS1307 = 1
+.equ SQWE_DS1307 = 4
+.equ OUT_DS1307 = 7
+
+;*******************************************************************************************
+;Status codes for Master Transmitter Mode
+.equ STATUS_START=0x08              ;A START condition has been transmitted
+.equ STATUS_START_REPEATED=0x10     ;A repeated START condition has been transmitted
+.equ STATUS_SLAVE_WRITE_ACK=0x18    ;SLA+W has been transmitted, ACK has been received
+.equ STATUS_SLAVE_WRITE_NACK=0x20   ;SLA+W has been transmitted, NOT ACK has been received
+.equ STATUS_DATA_TRANSMIT_ACK=0x28  ;Data byte has been transmitted, ACK has been received
+.equ STATUS_DATA_TRANSMIT_NACK=0x30 ;Data byte has been transmitted, NOT ACK has been received
+.equ STATUS_ARBITR_LOST=0x38        ;Arbitration lost in SLA+W or data bytes
+
+;*******************************************************************************************
+;Status codes for Master Receiver Mode
+;.equ STATUS_START=0x08              ;A START condition has been transmitted
+;.equ STATUS_START_REPEATED=0x10     ;A repeated START condition has been transmitted
+;.equ STATUS_ARBITR_LOST=0x38        ;Arbitration lost in SLA+W or data bytes
+.equ STATUS_SLAVE_READ_ACK=0x40     ;SLA+R has been transmitted, ACK has been received
+.equ STATUS_SLAVE_READ_NACK=0x48    ;SLA+R has been transmitted, NOT ACK has been received
+.equ STATUS_DATA_RECEIVED_ACK=0x50  ;Data byte has been received, ACK has been returned
+.equ STATUS_DATA_RECEIVED_NACK=0x58 ;Data byte has been received, NOT ACK has been returned
