@@ -198,6 +198,23 @@ void testColorCirclePWM(uint8_t color)
 
 }
 
+///Fill all diode.
+void testFillAllPWM()
+{
+		
+	RGB_DATA_Typedef localRGB;
+	static int8_t position = 0;	 
+	static uint16_t colorH = 0;
+	static float sat = 0;
+	
+	localRGB = HSVtoRGB(colorH, 0.9f, 0.5f);
+	colorH += 1;
+	if (colorH > 360) colorH = 0;		
+
+	updateAllLedsPWM(localRGB.green, localRGB.red, localRGB.blue);
+
+}
+
 /**\brief Function position led.
  **
  ***/

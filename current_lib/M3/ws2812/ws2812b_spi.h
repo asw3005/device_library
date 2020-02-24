@@ -55,4 +55,4 @@ typedef struct
 void initHardwareSPI(SPI_TypeDef *timer, DMA_Channel_TypeDef *dma_channel, GPIO_TypeDef *gpio);
 void testCircleSPI(uint8_t  color);
 void testColorCircleSPI(uint8_t color);///Color circle, one diode.
-
+void testFillAllSPI();///Fill all diode.

@@ -102,3 +102,4 @@ typedef struct
 void initHardwarePWM(TIM_TypeDef *timer, DMA_Channel_TypeDef *dma_channel, GPIO_TypeDef *gpio);
 void testCirclePWM(uint8_t  color);
 void testColorCirclePWM(uint8_t color);///Color circle, one diode.
+void testFillAllPWM();///Fill all diode.
