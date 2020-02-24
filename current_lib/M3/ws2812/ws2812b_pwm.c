@@ -6,14 +6,15 @@
 
 #include "ws2812b_pwm.h"
 #include "stm32f1xx_hal.h"
-
+#include "HSVtoRGB.h"
 /**\brief Private function prototype
  ***/
 static void updateLedColorsPWM(uint8_t green, uint8_t red, uint8_t blue,const uint8_t position);
-
+static enum error_led_param updateAllLedsPWM(uint8_t green, uint8_t red, uint8_t blue);
+static enum error_led_param updatePositionLedPWM(uint8_t green, uint8_t red, uint8_t blue, uint8_t position);
 /**\brief Instance of PWM_BUFFER_Typedef
  ***/
-static DATA_BUFFER_Typedef dataLedBuffer_PWM;      
+static DATA_BUFFER_Typedef dataLedBufferPWM;      
                               
 static CONFIGURATOR_PWM_Typedef conf[2] = 
 { 
@@ -34,9 +35,9 @@ static CONFIGURATOR_PWM_Typedef conf[2] =
 //	RCC->AHBENR |= RCC_AHBENR_DMA1EN;	
 //	DMA1_Channel2->CCR &= ~DMA_CCR_EN;
 //	DMA1_Channel2->CCR |= DMA_CCR_DIR | DMA_CCR_MINC | DMA_CCR_CIRC | /*DMA_CCR_MSIZE_0 |*/ DMA_CCR_PSIZE_0 /*| DMA_CCR_PL*/;	
-//	DMA1_Channel2->CNDTR = (uint16_t)sizeof(dataLedBuffer_PWM);
+//	DMA1_Channel2->CNDTR = (uint16_t)sizeof(dataLedBufferPWM);
 //	DMA1_Channel2->CPAR = (uint32_t)(&TIM1->CCR1);
-//	DMA1_Channel2->CMAR = (uint32_t)((uint8_t *)&dataLedBuffer_PWM);		
+//	DMA1_Channel2->CMAR = (uint32_t)((uint8_t *)&dataLedBufferPWM);		
 //  
 //	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
 //	GPIOA->CRH	&= ~GPIO_CRH_CNF8;                                  
@@ -53,7 +54,7 @@ static CONFIGURATOR_PWM_Typedef conf[2] =
 //	TIM1->BDTR |= TIM_BDTR_MOE;	
 //	TIM1->CR1 |= TIM_CR1_CEN; 
 //	
-//	for (volatile uint16_t i = 0; i < sizeof(dataLedBuffer_PWM.bitBuffer); i++) dataLedBuffer_PWM.bitBuffer[i] = TIM_0LEVEL;
+//	for (volatile uint16_t i = 0; i < sizeof(dataLedBufferPWM.bitBuffer); i++) dataLedBufferPWM.bitBuffer[i] = TIM_0LEVEL;
 //	
 //	DMA1_Channel2->CCR |= DMA_CCR_EN;
 //}
@@ -70,9 +71,9 @@ static CONFIGURATOR_PWM_Typedef conf[2] =
 //	RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 //	DMA1_Channel6->CCR &= ~DMA_CCR_EN;																									
 //	DMA1_Channel6->CCR |= DMA_CCR_DIR | DMA_CCR_MINC | DMA_CCR_CIRC | /*DMA_CCR_MSIZE_0 |*/ DMA_CCR_PSIZE_0 /*| DMA_CCR_PL*/;	
-//	DMA1_Channel6->CNDTR = (uint16_t)sizeof(dataLedBuffer_PWM); 			///<Set number of data transfer.
+//	DMA1_Channel6->CNDTR = (uint16_t)sizeof(dataLedBufferPWM); 			///<Set number of data transfer.
 //	DMA1_Channel6->CPAR = (uint32_t)(&TIM3->CCR1);					///<Set the address where data will be written
-//	DMA1_Channel6->CMAR = (uint32_t)((uint8_t *)&dataLedBuffer_PWM); 	///<Set the address from where data will be read	
+//	DMA1_Channel6->CMAR = (uint32_t)((uint8_t *)&dataLedBufferPWM); 	///<Set the address from where data will be read	
 //  
 //	///Config GPIO for timer channel, configuration output pin, reset CNF to 0, set AF-PP, out speed max 10MHz
 //	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
@@ -93,7 +94,7 @@ static CONFIGURATOR_PWM_Typedef conf[2] =
 //	TIM3->CR1 |= TIM_CR1_CEN; 
 //	
 //	///Initialise data buffer
-//	for(volatile uint16_t i = 0 ; i < sizeof(dataLedBuffer_PWM.bitBuffer) ; i++) dataLedBuffer_PWM.bitBuffer[i] = TIM_0LEVEL;
+//	for(volatile uint16_t i = 0 ; i < sizeof(dataLedBufferPWM.bitBuffer) ; i++) dataLedBufferPWM.bitBuffer[i] = TIM_0LEVEL;
 //	///Enable DMA
 //	DMA1_Channel6->CCR |= DMA_CCR_EN;
 //}
@@ -111,9 +112,9 @@ void initHardwarePWM(TIM_TypeDef *timer, DMA_Channel_TypeDef *dma_channel, GPIO_
 	RCC->AHBENR |= RCC_AHBENR_DMA1EN;
 	DMA1_Channel5->CCR &= ~DMA_CCR_EN;																									
 	DMA1_Channel5->CCR |= DMA_CCR_DIR | DMA_CCR_MINC | DMA_CCR_CIRC | /*DMA_CCR_MSIZE_0 |*/ DMA_CCR_PSIZE_0 /*| DMA_CCR_PL*/;	
-	DMA1_Channel5->CNDTR = (uint16_t)sizeof(dataLedBuffer_PWM);  		///<Set number of data transfer.
+	DMA1_Channel5->CNDTR = (uint16_t)sizeof(dataLedBufferPWM);  		///<Set number of data transfer.
 	DMA1_Channel5->CPAR = (uint32_t)(&TIM2->CCR1); 						///<Set the address where data will be written
-	DMA1_Channel5->CMAR = (uint32_t)((uint8_t *)&dataLedBuffer_PWM);  	///<Set the address from where data will be read	
+	DMA1_Channel5->CMAR = (uint32_t)((uint8_t *)&dataLedBufferPWM);  	///<Set the address from where data will be read	
   
 	///Config GPIO for timer channel, configuration output pin, reset CNF to 0, set AF-PP, out speed max 10MHz
 	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_AFIOEN;
@@ -134,35 +135,9 @@ void initHardwarePWM(TIM_TypeDef *timer, DMA_Channel_TypeDef *dma_channel, GPIO_
 	TIM2->CR1 |= TIM_CR1_CEN; 
 	
 	///Initialise data buffer
-	for(volatile uint16_t i = 0 ; i < sizeof(dataLedBuffer_PWM.bitBuffer) ; i++) dataLedBuffer_PWM.bitBuffer[i] = TIM_0LEVEL;
+	for(volatile uint16_t i = 0 ; i < sizeof(dataLedBufferPWM.bitBuffer) ; i++) dataLedBufferPWM.bitBuffer[i] = TIM_0LEVEL;
 	///Enable DMA
 	DMA1_Channel5->CCR |= DMA_CCR_EN;
-}
-
-/**\brief Function position led.
- **
- ***/
-enum error_led_param updatePositionLedPWM(uint8_t green, uint8_t red, uint8_t blue, uint8_t position)
-{ 
-	if (position > LED_NUMBERS_OF_STRIP_PWM) return NumbersOfLed_Err;
-	if (green > 255 || red > 255 || blue > 255) return ColorParam_Err;
-	
-	updateLedColorsPWM(green, red, blue, position);
-	
-	return InputParam_Ok;
-}
-
-/**\brief Function fill whole buffer, before shold be enable CIRC DMA.
- **
- ***/
-enum error_led_param updateAllLedsPWM(uint8_t green, uint8_t red, uint8_t blue)
-{ 	
-	if (green > 255 || red > 255 || blue > 255) return ColorParam_Err;
-	
-	for (volatile uint16_t i = 0; i < LED_NUMBERS_OF_STRIP_PWM; i++)
-	updateLedColorsPWM(green, red, blue, i);
-	
-	return InputParam_Ok;
 }
 
 /**\brief Function smootly chenges color.
@@ -171,43 +146,19 @@ enum error_led_param updateAllLedsPWM(uint8_t green, uint8_t red, uint8_t blue)
 void testCirclePWM(uint8_t color)
 {
 	static int8_t position = 0;
-	static uint8_t 	flagRedUpDown = 1, colorG = 0, colorR = 0, colorB = 0;		
-	
-//	if(flagRedUpDown == 0) colorR -= 1;
-//	else if(flagRedUpDown == 1)  colorR += 1;
-//			
-//	if (colorR == 0) flagRedUpDown = 1;
-//	else if (colorR == 210) flagRedUpDown = 0;
-	
+	static uint8_t 	colorG = 0, colorR = 0, colorB = 0;
+
 	switch (color)
 	{
-	case green:
-		colorG = 128;
-		colorR = 0;
-		colorB = 0;
+	case green:	colorG = 128; colorR = 0; colorB = 0;
 		break;
-	case red:	
-		colorG = 0;
-		colorR = 128;
-		colorB = 0;
+	case red:	colorG = 0;	colorR = 128; colorB = 0;
 		break;
-	case blue:
-		colorG = 0;
-		colorR = 0;
-		colorB = 128;		
+	case blue:	colorG = 0;	colorR = 0;	colorB = 128;		
 		break;			
 	default:
 		break;
 	}
-		
-//	if(position == 16) { updatePositionLedPWM(colorG, colorR, colorB, 0); }
-//	else updatePositionLedPWM(colorG, colorR, colorB, position);
-//		
-//	if (position == 0) updatePositionLedPWM(0, 0, 0, 15);
-//	else { 
-//		updatePositionLedPWM(0, 0, 0, position - 1); 
-//		if (position == 16) position = 0; 
-//	}
 	
 	if(position == 8) { updatePositionLedPWM(colorG, colorR, colorB, 0); }
 	else updatePositionLedPWM(colorG, colorR, colorB, position);
@@ -221,32 +172,56 @@ void testCirclePWM(uint8_t color)
 	position++;
 }
 
-/**\brief Function smootly chenges color.
+///Color circle, one diode.
+void testColorCirclePWM(uint8_t color)
+{
+	UNUSED(color);
+	
+	RGB_DATA_Typedef localRGB;
+	static int8_t position = 0;	 
+	static uint16_t colorH = 0;
+	static float sat = 0;
+	
+	localRGB = HSVtoRGB(colorH, 0.95f, 1.0f);
+	colorH += 1;
+	if (colorH > 360) colorH = 0;		
+
+	if(position == 8) { updatePositionLedPWM(localRGB.green, localRGB.red, localRGB.blue, 0); }
+	else updatePositionLedPWM(localRGB.green, localRGB.red, localRGB.blue, position);
+	
+	if (position == 0) { updatePositionLedPWM(0, 0, 0, 7);}
+	else { 
+		updatePositionLedPWM(0, 0, 0, position - 1); 
+		if (position == 8) position = 0; 
+	}
+	position++;
+
+}
+
+/**\brief Function position led.
  **
  ***/
-void testColorPWM()
-{
-	static uint8_t green = 0, red = 0, blue = 0; 
-	static uint8_t 	flagGreenUpDown = 1, flagRedUpDown = 1, flagBlueUpDown = 1;	
-		
-	if (flagGreenUpDown == 0) green -= 1;
-	else if (flagGreenUpDown == 1)  green += 1;
-		
-	if (flagRedUpDown == 0) red -= 1;
-	else if (flagRedUpDown == 1)  red += 1;
-		
-	if (flagBlueUpDown == 0) blue -= 1;
-	else if (flagBlueUpDown == 1)  blue += 1;
-		
-	if (green == 20) flagGreenUpDown = 1;
-	else if (green == 150) flagGreenUpDown = 0;
-		
-	if (red == 20) flagRedUpDown = 1;
-	else if (red == 210) flagRedUpDown = 0;
-		
-	if (blue == 20) flagBlueUpDown = 1;
-	else if (blue == 140) flagBlueUpDown = 0;
-	updateAllLedsPWM(green, red, blue);
+static enum error_led_param updatePositionLedPWM(uint8_t green, uint8_t red, uint8_t blue, uint8_t position)
+{ 
+	if (position > LED_NUMBERS_OF_STRIP_PWM) return NumbersOfLed_Err;
+	if (green > 255 || red > 255 || blue > 255) return ColorParam_Err;
+	
+	updateLedColorsPWM(green, red, blue, position);
+	
+	return InputParam_Ok;
+}
+
+/**\brief Function fill whole buffer, before shold be enable CIRC DMA.
+ **
+ ***/
+static enum error_led_param updateAllLedsPWM(uint8_t green, uint8_t red, uint8_t blue)
+{ 	
+	if (green > 255 || red > 255 || blue > 255) return ColorParam_Err;
+	
+	for (volatile uint16_t i = 0; i < LED_NUMBERS_OF_STRIP_PWM; i++)
+		updateLedColorsPWM(green, red, blue, i);
+	
+	return InputParam_Ok;
 }
 
 /**\brief Function "updateLedColors" send data into led massive (strip, pcb led and other).
@@ -260,26 +235,26 @@ static void updateLedColorsPWM(uint8_t green, uint8_t red, uint8_t blue, const u
 	prepColors = green;	
 	for (i = 0; i < 8 ; i++)
 	{
-		if ((prepColors & 0x80) != 0) dataLedBuffer_PWM.bitBuffer[i + position*COLORS_DATA_BITS] = TIM_1LEVEL;
-		else dataLedBuffer_PWM.bitBuffer[i + position*COLORS_DATA_BITS] = TIM_0LEVEL;
+		if ((prepColors & 0x80) != 0) dataLedBufferPWM.bitBuffer[i + position*COLORS_DATA_BITS_PWM] = TIM_1LEVEL;
+		else dataLedBufferPWM.bitBuffer[i + position*COLORS_DATA_BITS_PWM] = TIM_0LEVEL;
 		prepColors <<= 1;
 	}
 
 	prepColors = red;
 	for (i = 0; i < 8; i++)
 	{
-		if ((prepColors & 0x80) != 0) dataLedBuffer_PWM.bitBuffer[i + 8 + position*COLORS_DATA_BITS] = TIM_1LEVEL;
-		else dataLedBuffer_PWM.bitBuffer[i + 8 + position*COLORS_DATA_BITS] = TIM_0LEVEL;
+		if ((prepColors & 0x80) != 0) dataLedBufferPWM.bitBuffer[i + 8 + position*COLORS_DATA_BITS_PWM] = TIM_1LEVEL;
+		else dataLedBufferPWM.bitBuffer[i + 8 + position*COLORS_DATA_BITS_PWM] = TIM_0LEVEL;
 		prepColors <<= 1;
 	}
 
 	prepColors = blue;
 	for (i = 0; i < 8; i++)
 	{
-		if ((prepColors & 0x80) != 0) dataLedBuffer_PWM.bitBuffer[i + 16 + position*COLORS_DATA_BITS] = TIM_1LEVEL;
-		else dataLedBuffer_PWM.bitBuffer[i + 16 + position*COLORS_DATA_BITS] = TIM_0LEVEL;
+		if ((prepColors & 0x80) != 0) dataLedBufferPWM.bitBuffer[i + 16 + position*COLORS_DATA_BITS_PWM] = TIM_1LEVEL;
+		else dataLedBufferPWM.bitBuffer[i + 16 + position*COLORS_DATA_BITS_PWM] = TIM_0LEVEL;
 		prepColors <<= 1;
 	}
 		
-	//dataLedBuffer.loadSecondFrame = LOAD_FRAME_TIME;
+	//dataLedBufferPWM.loadSecondFrame = 0;
 }

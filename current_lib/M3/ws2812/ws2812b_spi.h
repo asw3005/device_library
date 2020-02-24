@@ -14,19 +14,19 @@
  ***/
 
 ///Define parameters of led strip and buffer.
-#define THREE_COLORS				///<THREE_COLORS  - strip colors, if not def, the colors set to four colors led.
+#define THREE_COLORS_SPI				///<THREE_COLORS  - strip colors, if not def, the colors set to four colors led.
 #define LED_NUMBERS_OF_STRIP_SPI 16		///<LED_NUMBERS_OF_STRIP - led numbers in the led strip. 
-#define COLORS_DATA_BITS 24			///<BUFFER_SIZE_STRIP - compute the buffer size.    
+#define COLORS_DATA_BITS_SPI 24			///<BUFFER_SIZE_STRIP - compute the buffer size.    
 /// \cond
-#ifdef THREE_COLORS
-#define COLOR_NUMBERS_OF_LED 3	///<Numbers of led in strip.
+#ifdef THREE_COLORS_SPI
+#define COLOR_NUMBERS_OF_LED_SPI 3	///<Numbers of led in strip.
     //#define DATA_BYTES_QUANTITY 3 
 #else  
 #define COLOR_NUMBERS_OF_LED 4
-    //#define DATA_BYTES_QUANTITY 4
+    //#define DATA_BYTES_QUANTITY_SPI 4
 #endif
 /// \endcond
-#define BUFFER_SIZE_STRIP_SPI (LED_NUMBERS_OF_STRIP_SPI * COLOR_NUMBERS_OF_LED * 8)		///<Size for data buffer.  
+#define BUFFER_SIZE_STRIP_SPI (LED_NUMBERS_OF_STRIP_SPI * COLOR_NUMBERS_OF_LED_SPI * 8)		///<Size for data buffer.  
 
 ///Define parameters for spi, input clock 7MHz, period 142.8nS.
 ///<Frequency is 800kHz, step SPI is 152.8nS (determined timer's input clock).
@@ -53,7 +53,6 @@ typedef struct
  **
  ***/
 void initHardwareSPI(SPI_TypeDef *timer, DMA_Channel_TypeDef *dma_channel, GPIO_TypeDef *gpio);
-enum error_led_param updatePositionLedSPI(uint8_t green, uint8_t red, uint8_t blue, uint8_t position);
-enum error_led_param updateAllLedsSPI(uint8_t green, uint8_t red, uint8_t blue);
 void testCircleSPI(uint8_t  color);
-void chengeColorSmootlySPI(void);
+void testColorCircleSPI(uint8_t color);///Color circle, one diode.
+

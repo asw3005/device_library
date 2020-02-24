@@ -15,19 +15,19 @@
 //#define SYSCLOCK_72
 //#define SYSCLOCK_64
 #define SYSCLOCK_56
-#define THREE_COLORS				///<THREE_COLORS  - strip colors, if not def, the colors set to four colors led.
+#define THREE_COLORS_PWM				///<THREE_COLORS  - strip colors, if not def, the colors set to four colors led.
 #define LED_NUMBERS_OF_STRIP_PWM 8		///<LED_NUMBERS_OF_STRIP - led numbers in the led strip. 
-#define COLORS_DATA_BITS 24			///<BUFFER_SIZE_STRIP - compute the buffer size.    
+#define COLORS_DATA_BITS_PWM 24			///<BUFFER_SIZE_STRIP - compute the buffer size.    
 /// \cond
-#ifdef THREE_COLORS
-#define COLOR_NUMBERS_OF_LED 3	///<Numbers of led in strip.
+#ifdef THREE_COLORS_PWM
+#define COLOR_NUMBERS_OF_LED_PWM 3	///<Numbers of led in strip.
     //#define DATA_BYTES_QUANTITY 3 
 #else  
-#define COLOR_NUMBERS_OF_LED 4
+#define COLOR_NUMBERS_OF_LED_PWM 4
     //#define DATA_BYTES_QUANTITY 4
 #endif
 /// \endcond
-#define BUFFER_SIZE_STRIP_PWM (LED_NUMBERS_OF_STRIP_PWM * COLOR_NUMBERS_OF_LED * 8)///<Size for data buffer.  
+#define BUFFER_SIZE_STRIP_PWM (LED_NUMBERS_OF_STRIP_PWM * COLOR_NUMBERS_OF_LED_PWM * 8)///<Size for data buffer.  
 
 ///Define parameters for timer and timer's PWM channel
 #define TIM_PRESCALER       1   ///<Prescaler for input clock, output clock 36MHz, period 27,7nS. Output clock 32MHz, period 31.25nS.
@@ -100,7 +100,5 @@ typedef struct
  **
  ***/
 void initHardwarePWM(TIM_TypeDef *timer, DMA_Channel_TypeDef *dma_channel, GPIO_TypeDef *gpio);
-enum error_led_param updatePositionLedPWM(uint8_t green, uint8_t red, uint8_t blue, uint8_t position);
-enum error_led_param updateAllLedsPWM(uint8_t green, uint8_t red, uint8_t blue);
-void testColorPWM(void);
 void testCirclePWM(uint8_t  color);
+void testColorCirclePWM(uint8_t color);///Color circle, one diode.
