@@ -9,13 +9,21 @@
 #include "BME280.h"
 #include "I2C1.h"
 
-int32_t t_fine;
+
 TempHumPressStruct TempHumPressBME280;
 
+static int32_t t_fine;
 static AddressStruct bme280Address;
 static ConfigStruct bme280ConfigStruct;
 static DataReceiveStruct bme280DataReceive;
 static CompensationParameterStorageStruct bme280CompParamReceived;
+
+//***************************************************************************************************************************************
+//Private function prototype
+static void BME280PreparationConfig(void);                   //Подготовка конфигурационных данных (работа внутри помещения)
+static int32_t BME280TemperatureConv(void);                  //Преобразование температуры
+static uint32_t BME280HumidityConv(void);                    //Преобразование влажности
+static uint32_t BME280PressureConv(void); 					//Преобразование давления 
 
 
 //**********************************************************************************************************************************
@@ -24,17 +32,17 @@ void BME280PreparationConfig(void)
 {
 	bme280Address.AddressBME280 = ADDR_BME280_WRITE_MODE;
 	bme280ConfigStruct.AddressRegisterCtrlHum = CTRL_HUM_ADDR;
-	bme280ConfigStruct.DataCtrlHum.bitsDataCtrlHum.osrs_h = OSRS_H_OVERSAMPLING_1;
+	bme280ConfigStruct.bitsDataCtrlHum.osrs_h = OSRS_H_OVERSAMPLING_1;
 	
 	bme280ConfigStruct.AddressRegisterCtrlMeas = CTRL_MEAS_ADDR;
-	bme280ConfigStruct.DataCtrlMeas.bitsDataCtrlMeas.mode = NORMAL_MODE;
-	bme280ConfigStruct.DataCtrlMeas.bitsDataCtrlMeas.osrs_p = OSRS_P_OVERSAMPLING_16;
-	bme280ConfigStruct.DataCtrlMeas.bitsDataCtrlMeas.osrs_t = OSRS_T_OVERSAMPLING_2;
+	bme280ConfigStruct.bitsDataCtrlMeas.mode = NORMAL_MODE;
+	bme280ConfigStruct.bitsDataCtrlMeas.osrs_p = OSRS_P_OVERSAMPLING_16;
+	bme280ConfigStruct.bitsDataCtrlMeas.osrs_t = OSRS_T_OVERSAMPLING_2;
 	
 	bme280ConfigStruct.AddressRegisterConfig = CONFIG_ADDR;
-	bme280ConfigStruct.DataConfig.bitsDataConfig.spi3w_en = SPI3WIRE_DIS;
-	bme280ConfigStruct.DataConfig.bitsDataConfig.t_sb = T_SB_500mS;
-	bme280ConfigStruct.DataConfig.bitsDataConfig.filter = FILTER_COEFF16; 
+	bme280ConfigStruct.bitsDataConfig.spi3w_en = SPI3WIRE_DIS;
+	bme280ConfigStruct.bitsDataConfig.t_sb = T_SB_500mS;
+	bme280ConfigStruct.bitsDataConfig.filter = FILTER_COEFF16; 
 }
 
 //**********************************************************************************************************************************

@@ -1,27 +1,32 @@
-/* Created: 27.05.2018
- * BME280.h
- * 
- * 
- * 
- */	
+/** Created: 27.05.2018
+ ** BME280.h
+ **/	
 #pragma once
 //#ifndef BME280_H_
 //#define BME280_H_
 
-#include "stm32f10x.h"
+#include "stm32l4xx_hal.h"
+/**
+ ** @brief Number device profiles UNUSED
+ **/
+//#define NUMBER_DEVICE_PROFILES			0x03
 
-//***************************************************************************************************************************************
-//Константы
+/**
+ ** @brief Device address
+ **/
 #define ADDR_BME280_SHIFTED             0xEC                                //7 bit MSB 0x76 (address) + 1 bit LSB 0x00 (read/write)
 #define ADDR_BME280						0x76								//It's not shifted address
+#define ADDR_BME280_SHIFTED_ALTERNATIVE 0xEE                                //
+#define ADDR_BME280_ALTERNATIVE			0x77								//It's not shifted address
 #define WRITE_MODE						0x00								//режим записи в ведомое устройство				
 #define READ_MODE						0x01								//режим чтения из ведомого устройства
 
 #define ADDR_BME280_WRITE_MODE	        (ADDR_BME280 | WRITE_MODE)		    //Отправить адрес ведомого устройства, режим запись 
 #define ADDR_BME280_READ_MODE			(ADDR_BME280 | READ_MODE)			//Отправить адрес ведомого устройства, режим чтение
 
-//***************************************************************************************************************************************
-//Internal registers addresses
+/**
+ ** @brief Internal registers addresses
+ **/
 #define CALIB00_START_ADDR              0x88
 #define CALIB25_FINISH_ADDR             0xA1
 #define ID_ADDR                         0xD0
@@ -41,10 +46,14 @@
 #define HUM_MSB_ADDR                    0xFD
 #define HUM_LSB_ADDR                    0xFE
 
-//***************************************************************************************************************************************
-//Состояние СБРОС (остальные коды не имеют воздействия)
+/**
+ ** @brief Software reset
+ **/
 #define RESET_STATE                     0xB6
 
+/**
+ ** @brief Data aquisition control humidity. Default condition is 0x8000.
+ **/
 //***************************************************************************************************************************************
 //Настройка режима сбора данных о влажности CTRL_HUM (в состоянии SKIPPED влажность имеет значение 0x8000)
 #define OSRS_H_SKIPPED                  0x00
@@ -54,9 +63,9 @@
 #define OSRS_H_OVERSAMPLING_8           0x04
 #define OSRS_H_OVERSAMPLING_16          0x05
 
-//***************************************************************************************************************************************
-//Настройка режима сбора данных о давлении и температуре, режима работы датчика CTRL_MEAS (в состоянии SKIPPED давление и температура 
-//имеют значения 0x8000)
+/**
+ ** @brief Data aquisition control temperature, pressure, measurement. Default condition is 0x8000
+ **/
 #define OSRS_P_SKIPPED                  0x00
 #define OSRS_P_OVERSAMPLING_1           0x01
 #define OSRS_P_OVERSAMPLING_2           0x02
@@ -76,8 +85,9 @@
 //#define FORCED_MODE                     0x02
 #define NORMAL_MODE                     0x03
 
-//***************************************************************************************************************************************
-//Настройка скорости, фильтрации и интерфейса обмена в регистре CONFIG
+/**
+ ** @brief Configuration speed, filter, interface
+ **/
 #define T_SB_500uS                      0x00
 #define T_SB_62500uS                    0x01
 #define T_SB_125mS                      0x02
@@ -96,60 +106,88 @@
 #define SPI3WIRE_EN                     0x01
 #define SPI3WIRE_DIS                    0x00
 
-//***************************************************************************************************************************************
-//Address struct 
-typedef struct {
-	uint8_t AddressBME280;
-	
-} AddressStruct;
+/**
+ ** @brief  
+ ** 
+ ** 
+ **
+ **/
+/**
+ ** @brief Device specific function type
+ ** 
+ ** @param[in] dev_addr : Device address on the I2C bus
+ ** @param[in] reg_addr : Register address for device
+ ** @param[in] *data : Pointer on data struct instance
+ ** @param[in] len : Length of transmition/reception data
+ **
+ ** @return Result of API execution status
+ ** @retval zero -> Success / +ve value -> Warning / -ve value -> Error
+ **/
+typedef int8_t(*bme280_communication_fptr)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
+typedef void(*bme280_delay_fptr)(uint32_t period);
 
-//***************************************************************************************************************************************
-//TempHumPress struct
+/**
+ ** @brief Device measurement profiles
+ **/
+typedef enum 
+{ 
+	WEATHER_MONITORING,
+	HUMIDITY_SENSING,
+	INDOOR_NAVIGATION,
+	GAMING,
+	CUSTOM_PROFILE_0,
+	
+} PROFILES_enum;
+
+/**
+ ** @brief Compensated data
+ **/
 typedef struct {
-	int32_t ID;
 	int32_t TemperatureC;
 	int32_t TemperatureF;
 	uint32_t HumidityRH;
 	uint32_t PressurePa;
 	uint32_t PressuremmHg;
 	
-} TempHumPressStruct;
+} TempHumPressStruct_typedef;
 
-//***************************************************************************************************************************************
-//Configuration struct 
+/**
+ ** @brief Configuration registers
+ **/
 typedef struct {
 	uint8_t AddressRegisterCtrlHum;
 	union {	
 		uint8_t DataCtrlHum;
 		struct {
-			uint8_t   osrs_h			:3;   
-			uint8_t   RESERVED_0		:5;			
+			uint8_t   osrs_h			: 3;   
+			uint8_t   RESERVED_0		: 5;			
 		} bitsDataCtrlHum;				
 	};
 	uint8_t AddressRegisterCtrlMeas;
 	union {
 		uint8_t DataCtrlMeas;
 		struct {
-			uint8_t   mode				:2;   
-			uint8_t   osrs_p			:3;
-			uint8_t   osrs_t			:3; 
+			uint8_t   mode				: 2;   
+			uint8_t   osrs_p			: 3;
+			uint8_t   osrs_t			: 3; 
 		} bitsDataCtrlMeas;
 	};
 	uint8_t AddressRegisterConfig;
 	union {
 		uint8_t DataConfig;
 		struct {
-			uint8_t   spi3w_en			:1;   
-			uint8_t   RESERVED_1		:1;
-			uint8_t   filter			:3;   
-			uint8_t   t_sb				:3; 
+			uint8_t   spi3w_en			: 1;   
+			uint8_t   RESERVED_1		: 1;
+			uint8_t   filter			: 3;   
+			uint8_t   t_sb				: 3; 
 		} bitsDataConfig;
 	};
 	
-} ConfigStruct;
+} ConfigStruct_typedef;
 
-//***************************************************************************************************************************************
-//Data receive parameter
+/**
+ ** @brief Data receive parametr
+ **/
 typedef struct {
 	uint8_t	Ctrl_Hum;		                        
 	uint8_t	Status;			                          
@@ -165,10 +203,11 @@ typedef struct {
 	uint8_t	Hum_msb;			                         
 	uint8_t	Hum_lsb;			 
 	
-} DataReceiveStruct;
+} DataReceiveStruct_typedef;
 
-//***************************************************************************************************************************************
-//Compensation Parameter Storage
+/**
+ ** @brief Calibration data
+ **/
 //typedef struct __attribute__((aligned(1), packed)) {
 #pragma pack(push, 1)
 typedef struct {
@@ -197,17 +236,36 @@ typedef struct {
 	int8_t Dig_H5_11_4;
 	int8_t Dig_H6;
 	
-} CompensationParameterStorageStruct;
+} CompensationParameterStorageStruct_typedef;
 #pragma pack(pop)
 
-//***************************************************************************************************************************************
-//Public function prototype	
-void getBME280DataPressTempHum(void);					//Получить данные о давлении, температуре и влажности
-void BME280WriteConfig(void);								//Запись конфигурационных данных  
-void getBME280CalibrationData(void); 						//Получить калибровочные данные первый диапазон 
-void getBME280CalibrationData0(void);                       //Получить калибровочные данные первый диапазон
-void getBME280CalibrationData1(void);                       //Получить калибровочные данные первый диапазон 
-void getBME280ID(void);										//Получить ID 
+/**
+ ** @brief BME280 instance struct
+ **/
+typedef struct {
+	
+	uint8_t dev_address;
+	uint8_t dev_id;
+	ConfigStruct_typedef dev_configuration;
+	DataReceiveStruct_typedef dev_uncompensated_data;
+	CompensationParameterStorageStruct_typedef dev_calibration_data;
+	bme280_communication_fptr read_data_i2c;
+	bme280_communication_fptr write_data_i2c;
+	bme280_delay_fptr delay;	
+	TempHumPressStruct_typedef dev_compensated_data;
+	
+	
+} BME280_typedef;
+
+/**
+ ** @brief Public function prototype
+ **/
+TempHumPressStruct_typedef* getBME280DataPressTempHum(BME280_typedef *dev_bme280); 
+void BME280WriteConfig(void); 								//Запись конфигурационных данных  
+void getBME280CalibrationData(BME280_typedef *dev_bme280); 
+void getBME280CalibrationData0(BME280_typedef *dev_bme280); 
+void getBME280CalibrationData1(BME280_typedef *dev_bme280);  
+void getBME280ID(BME280_typedef *dev_bme280); 
  
 //#endif /* BME280_H_ */
 
