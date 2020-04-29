@@ -28,3 +28,67 @@ static void readTemperatureBME280Task(void)
 	
 	}
 }
+
+//additional function
+#include "stm32l4xx_hal.h"
+
+/**
+ ** @brief External variable
+ **/
+extern I2C_HandleTypeDef hi2c1;
+
+/**
+ ** @brief Drive reset pin
+ **/
+void driveResetPin(uint8_t drive_reset_pin)
+{
+	if (drive_reset_pin)
+		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+	else HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+}
+
+/**
+ ** @brief Read i2c function for external device library 
+ **/
+int8_t user_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
+{
+	int8_t rslt = 1; /* Return 0 for Success, non-zero for failure */
+
+	rslt = HAL_I2C_Mem_Read_IT(&hi2c1, dev_id, reg_addr, I2C_MEMADD_SIZE_8BIT, reg_data, len);
+
+	return rslt = 0;
+}
+
+/**
+ ** @brief Write i2c function for external device library 
+ **/
+int8_t user_i2c_write(uint8_t dev_id, uint8_t reg_addr, uint8_t *reg_data, uint16_t len)
+{
+	int8_t rslt = 1; /* Return 0 for Success, non-zero for failure */
+
+	rslt = HAL_I2C_Mem_Write_IT(&hi2c1, dev_id, reg_addr, I2C_MEMADD_SIZE_8BIT, reg_data, len);
+
+	return rslt = 0;
+}
+
+/**
+ ** @brief Alternative write  function for external device library 
+ **/
+int8_t user_i2c_write_alt(uint8_t dev_addr, uint8_t data, uint16_t len)
+{
+	int8_t rslt = 1; /* Return 0 for Success, non-zero for failure */
+	
+	uint8_t tmp_data = data;
+	rslt = HAL_I2C_Master_Transmit_IT(&hi2c1, dev_addr, &tmp_data, len);
+	
+	return rslt = 0;
+}
+
+/**
+ ** @brief Delay function for external device library 
+ **/
+void user_delay_ms(uint32_t period)
+{
+	vTaskDelay(period);
+	//HAL_Delay(period);
+}
