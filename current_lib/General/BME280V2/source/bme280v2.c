@@ -1,19 +1,18 @@
 /* Created: 27.05.2018
- * BME280.c
+ * bme280v2.c
  *  
- * 
- * 
  */	
 
 #include "stm32l4xx_hal.h"
 #include "bme280v2.h"
 
-static int32_t t_fine;
-BME280_typedef dev_bme280_inst0 = { 
-	
-	.dev_address = ADDR_BME280,
 
-};
+static int32_t t_fine;
+//BME280_typedef dev_bme280_inst0 = { 
+//	
+//	.dev_address = ADDR_BME280,
+//
+//};
 
 //***************************************************************************************************************************************
 //Private function prototype
@@ -24,11 +23,14 @@ static uint32_t BME280PressureConv(BME280_typedef *dev_bme280);   					//Пре�
 static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280); 
 
 
-//**********************************************************************************************************************************
-//Подготовка конфигурационных данных (работа внутри помещения)
-void initDevice(PROFILES_enum meas_profil, BME280_typedef *dev_bme280)                              
-{
+/**
+ ** @brief Init device  
+ **/
+void initDeviceBME280(PROFILES_enum meas_profil, BME280_typedef *dev_bme280)                              
+{	
+	//Config work mode for device
 	setProfile(meas_profil, dev_bme280);	
+	getBME280CalibrationData(dev_bme280);
 }
 
 /**
@@ -324,6 +326,5 @@ static uint32_t BME280PressureConv(BME280_typedef *dev_bme280)
 
 	return P;
 }
-
 
 

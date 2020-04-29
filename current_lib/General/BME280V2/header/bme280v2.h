@@ -107,12 +107,6 @@
 #define SPI3WIRE_DIS                    0x00
 
 /**
- ** @brief  
- ** 
- ** 
- **
- **/
-/**
  ** @brief Device specific function type
  ** 
  ** @param[in] dev_addr : Device address on the I2C bus
@@ -260,8 +254,9 @@ typedef struct {
 /**
  ** @brief Public function prototype
  **/
+void initDeviceBME280(PROFILES_enum meas_profil, BME280_typedef *dev_bme280);
 TempHumPressStruct_typedef* getBME280DataPressTempHum(BME280_typedef *dev_bme280); 
-void BME280WriteConfig(void); 								//Запись конфигурационных данных  
+void BME280WriteConfig(void); 								  
 void getBME280CalibrationData(BME280_typedef *dev_bme280); 
 void getBME280CalibrationData0(BME280_typedef *dev_bme280); 
 void getBME280CalibrationData1(BME280_typedef *dev_bme280);  
