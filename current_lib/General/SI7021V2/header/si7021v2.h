@@ -8,34 +8,34 @@
 /**
  ** @brief Constants
  **/
-#define ADDR_SI7021_SHIFTED             0x80                                //7 bit MSB 0x76 (address) + 1 bit LSB 0x00 (read/write)
-#define ADDR_SI7021						0x40								//It's not shifted address
-#define WRITE_MODE						0x00								//режим записи в ведомое устройство				
-#define READ_MODE						0x01								//режим чтения из ведомого устройства
+#define ADDR_SI7021_SHIFTED             0x80    //7 bit MSB 0x76 (address) + 1 bit LSB 0x00 (read/write)
+#define ADDR_SI7021						0x40	//It's not shifted address
+#define WRITE_MODE						0x00	//			
+#define READ_MODE						0x01	//
 
 /**
  ** @brief Internal command SI7021
  **/
-static enum InternalCommandEnum {
+static enum {
 	
-	MeasureRHHoldMaster					= 0xE5,
-	MeasureRHNoHoldMaster				= 0xF5,
-	MeasureTHoldMaster					= 0xE3,
-	MeasureTNoHoldMaster				= 0xF3,
-	ReadTValuePrevious					= 0xE0,
-	Reset								= 0xFE,
-	WriteRHTUserReg_1					= 0xE6,
-	ReadRHTUserReg_1					= 0xE7,
-	WriteHeaterCR						= 0x51,
-	ReadHeaterCR						= 0x11,
-	ReadElectronicIDFirstBytePart1		= 0xFA,
-	ReadElectronicIDFirstBytePart2		= 0x0F,
-	ReadElectronicIDSecondBytePart1		= 0xFC,
-	ReadElectronicIDSecondBytePart2		= 0xC9,
-	ReadFirmwareRevisionPart1			= 0x84,
-	ReadFirmwareRevisionPart2			= 0xB8,
+	MEASURE_RHHOLD_MASTER					= 0xE5,
+	MEASURE_RHNOHOLD_MASTER					= 0xF5,
+	MEASURE_THOLD_MASTER					= 0xE3,
+	MEASURE_TNOHOLD_MASTER					= 0xF3,
+	READT_VALUE_PREVIOUS					= 0xE0,
+	SOFT_RESET_SI7021						= 0xFE,
+	WRITE_RHT_USER_REG_1					= 0xE6,
+	READ_RHT_USER_REG_1						= 0xE7,
+	WRITE_HEATER_CR							= 0x51,
+	READ_HEATER_CR							= 0x11,
+	READ_ELECTRONIC_ID_FIRST_BYTE_PART1		= 0xFA,
+	READ_ELECTRONIC_ID_FIRST_BYTE_PART2		= 0x0F,
+	READ_ELECTRONIC_ID_SECOND_BYTE_PART1	= 0xFC,
+	READ_ELECTRONIC_ID_SECOND_BYTE_PART2	= 0xC9,
+	READ_FIRMWARE_REVISION_PART1			= 0x84,
+	READ_FIRMWARE_REVISION_PART2			= 0xB8,
 
-} InternalCommand;
+} InternalCommandSI7021_enum;
 
 /**
  ** @brief Device specific function type
@@ -61,13 +61,12 @@ typedef struct {
 	int32_t TemperatureF;
 	uint32_t HumidityRH;
 	
-} TempHumStruct_typedef;
+} TempHumStructSI7021_typedef;
 
 /**
  ** @brief Configuration struct
  **/
 typedef struct {
-	uint8_t WriteUserRegCmd;
 	union {
 		uint8_t ControlRegister;
 		struct {
@@ -83,7 +82,6 @@ typedef struct {
 		}bitsControlRegister;
 	};
 	
-	uint8_t WriteHeaterRegCmd;
 	union {
 		uint8_t HeaterControlRegister;
 		struct {
@@ -92,8 +90,7 @@ typedef struct {
 			
 		}bitsHeaterControlRegister;
 	};
-	
-	
+		
 } ConfigStructSI7021_typedef;
 
 /**
@@ -144,7 +141,7 @@ typedef struct {
 	si7021_communication_fptr read_data_i2c;
 	si7021_communication_fptr write_data_i2c;
 	si7021_delay_fptr delay;	
-	TempHumStruct_typedef dev_compensated_data;
+	TempHumStructSI7021_typedef dev_compensated_data;
 	
 	
 } SI7021_typedef;
@@ -154,9 +151,9 @@ typedef struct {
  **/
 
 //Get temperature
-TempHumStruct_typedef* getSI7021Temp(SI7021_typedef *dev_si7021);	
+TempHumStructSI7021_typedef* getSI7021Temp(SI7021_typedef *dev_si7021);	
 //Get humidity
-TempHumStruct_typedef* getSI7021Hum(SI7021_typedef *dev_si7021); 		
+TempHumStructSI7021_typedef* getSI7021Hum(SI7021_typedef *dev_si7021); 		
 //Set configuration register
 void setConfugurationSI7021(uint8_t measurement_resolution, uint8_t heater_en, uint8_t heater_value, SI7021_typedef *dev_si7021); 
 //Get firmware revision
