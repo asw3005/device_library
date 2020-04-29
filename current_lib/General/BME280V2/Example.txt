@@ -1,0 +1,30 @@
+/**
+ ** @brief Reading temperature from bme280 sensor task 
+ **/
+static void readTemperatureBME280Task(void)
+{
+	static BME280_typedef dev_bme280_inst0 = { 
+	
+		.dev_address = ADDR_BME280_SHIFTED,
+		.read_data_i2c = user_i2c_read,
+		.write_data_i2c = user_i2c_write,
+		.delay = user_delay_ms,
+	};
+	
+		driveResetPin(PCA9546_RSTPIN_SET);
+		selectChannel(CHANNEL_BME280, &pca9546_instance0);
+		initDeviceBME280(INDOOR_NAVIGATION, &dev_bme280_inst0);
+	
+	for (;;)
+	{
+		TempHumPressStruct_typedef *dev_compensated_data;
+		xSemaphoreTake(mutI2C1Handle, portMAX_DELAY);
+		selectChannel(CHANNEL_BME280, &pca9546_instance0);
+		dev_compensated_data = getBME280DataPressTempHum(&dev_bme280_inst0);
+		//vTaskSuspend(readTemperatureBME280Handle);
+		xSemaphoreGive(mutI2C1Handle);
+		vTaskDelay(1000);
+		
+	
+	}
+}
