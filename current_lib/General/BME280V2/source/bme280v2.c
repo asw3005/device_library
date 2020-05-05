@@ -6,46 +6,44 @@
 #include "stm32l4xx_hal.h"
 #include "bme280v2.h"
 
-
+/**
+ ** @brief Public variable
+ **/
 static int32_t t_fine;
-//BME280_typedef dev_bme280_inst0 = { 
-//	
-//	.dev_address = ADDR_BME280,
-//
-//};
 
-//***************************************************************************************************************************************
-//Private function prototype
-static void BME280PreparationConfig(void);                    //Подготовка конфигурационных данных (работа внутри помещения)
-static int32_t BME280TemperatureConv(BME280_typedef *dev_bme280);                    //Преобразование температуры
-static uint32_t BME280HumidityConv(BME280_typedef *dev_bme280);                      //Преобразование влажности
-static uint32_t BME280PressureConv(BME280_typedef *dev_bme280);   					//Преобразование давления 
-static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280); 
+/**
+ ** @brief Private function prototype
+ **/
+static void BME280_Preparation_Config(void);											
+static int32_t BME280_Temperature_Conv(BME280_typedef *dev_bme280);                   
+static uint32_t BME280_Humidity_Conv(BME280_typedef *dev_bme280);                     
+static uint32_t BME280_Pressure_Conv(BME280_typedef *dev_bme280);   					
+static void BME280_Set_Profile(BME280_PROFILES_enum profile_type, BME280_typedef *dev_bme280); 
 
 
 /**
  ** @brief Init device  
  **/
-void initDeviceBME280(PROFILES_enum meas_profil, BME280_typedef *dev_bme280)                              
+void BME280_Init_Device(BME280_PROFILES_enum meas_profil, BME280_typedef *dev_bme280)                              
 {	
 	//Config work mode for device
-	setProfile(meas_profil, dev_bme280);	
-	getBME280CalibrationData(dev_bme280);
+	BME280_Set_Profile(meas_profil, dev_bme280);	
+	BME280_Get_Calibration_Data(dev_bme280);
 }
 
 /**
  ** @brief Get T, H, P 
  **/				
-TempHumPressStruct_typedef* getBME280DataPressTempHum(BME280_typedef *dev_bme280)                              
+BME280_TempHumPressStruct_typedef* BME280_Get_Data_Press_Temp_Hum(BME280_typedef *dev_bme280)                              
 {
-	dev_bme280->dev_compensated_data.TemperatureC = BME280TemperatureConv(dev_bme280);
-	dev_bme280->dev_compensated_data.TemperatureF = ((BME280TemperatureConv(dev_bme280) * 18) + 32000) / 10;
-	dev_bme280->dev_compensated_data.HumidityRH = (BME280HumidityConv(dev_bme280) * 1000) / 1024;
-	dev_bme280->dev_compensated_data.PressurePa = BME280PressureConv(dev_bme280);
+	dev_bme280->dev_compensated_data.TemperatureC = BME280_Temperature_Conv(dev_bme280);
+	dev_bme280->dev_compensated_data.TemperatureF = ((BME280_Temperature_Conv(dev_bme280) * 18) + 32000) / 10;
+	dev_bme280->dev_compensated_data.HumidityRH = (BME280_Humidity_Conv(dev_bme280) * 1000) / 1024;
+	dev_bme280->dev_compensated_data.PressurePa = BME280_Pressure_Conv(dev_bme280);
 	dev_bme280->dev_compensated_data.PressuremmHg = (((uint64_t) dev_bme280 ->dev_compensated_data.PressurePa * 1000000)) / 133322;
 	
-	dev_bme280->read_data_i2c(dev_bme280->dev_address, CTRL_HUM_ADDR, (uint8_t *)(&dev_bme280->dev_uncompensated_data), sizeof(dev_bme280->dev_uncompensated_data));
-	dev_bme280->delay(5);
+	dev_bme280->read_data_i2c(dev_bme280->dev_address, CTRL_HUM_ADDR, 1, (uint8_t *)(&dev_bme280->dev_uncompensated_data), sizeof(dev_bme280->dev_uncompensated_data));
+	dev_bme280->delay(1);
 	
 	return  &dev_bme280->dev_compensated_data;
 }
@@ -53,61 +51,58 @@ TempHumPressStruct_typedef* getBME280DataPressTempHum(BME280_typedef *dev_bme280
 /**
  ** @brief Get calibration data full range
  **/
-void getBME280CalibrationData(BME280_typedef *dev_bme280)                              
+void BME280_Get_Calibration_Data(BME280_typedef *dev_bme280)                              
 {
 	//write receive's register address to bme280 Config Struct
-	dev_bme280->read_data_i2c(dev_bme280->dev_address, CALIB00_START_ADDR, (uint8_t *)&dev_bme280->dev_calibration_data, sizeof(dev_bme280->dev_calibration_data));
-	dev_bme280->delay(5);
+	dev_bme280->read_data_i2c(dev_bme280->dev_address, CALIB00_START_ADDR, 1, (uint8_t *)&dev_bme280->dev_calibration_data, sizeof(dev_bme280->dev_calibration_data));
+	dev_bme280->delay(1);
 }
 
 /**
  ** @brief Get device's id
  **/
-void getBME280ID(BME280_typedef *dev_bme280)                              
+void BME280_GetID(BME280_typedef *dev_bme280)                              
 {
 	//write receive's register address to bme280 Config Struct
-	dev_bme280->read_data_i2c(dev_bme280->dev_address, ID_ADDR, (uint8_t *)(&dev_bme280->dev_calibration_data.bmeID), 1);
-	dev_bme280->delay(5);
+	dev_bme280->read_data_i2c(dev_bme280->dev_address, ID_ADDR, 1, (uint8_t *)(&dev_bme280->dev_calibration_data.bmeID), 1);
+	dev_bme280->delay(1);
 }
 
 /**
  ** @brief Get calibration data zero range
  **/
-void getBME280CalibrationData0(BME280_typedef *dev_bme280)                              
+void BME280_GetCalibration_Data0(BME280_typedef *dev_bme280)                              
 {
 	//write receive's register address to bme280 Config Struct
-	dev_bme280->read_data_i2c(dev_bme280->dev_address, CALIB00_START_ADDR, (uint8_t *)(&dev_bme280->dev_calibration_data), 26);
-	dev_bme280->delay(5);
+	dev_bme280->read_data_i2c(dev_bme280->dev_address, CALIB00_START_ADDR, 1, (uint8_t *)(&dev_bme280->dev_calibration_data), 26);
+	dev_bme280->delay(1);
 }
 
 /**
  ** @brief Get calibration data firt range
  **/
-void getBME280CalibrationData1(BME280_typedef *dev_bme280)                              
+void BME280_Get_Calibration_Data1(BME280_typedef *dev_bme280)                              
 {
 	//write receive's register address to bme280 Config Struct
-	dev_bme280->read_data_i2c(dev_bme280->dev_address, CALIB26_START_ADDR, (uint8_t *)(&dev_bme280->dev_calibration_data.Dig_H2), 7);
-	dev_bme280->delay(5);
+	dev_bme280->read_data_i2c(dev_bme280->dev_address, CALIB26_START_ADDR, 1, (uint8_t *)(&dev_bme280->dev_calibration_data.Dig_H2), 7);
+	dev_bme280->delay(1);
 }
 
 /**
  ** @brief Measurement profiles
  **/
-static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280)                              
+static void BME280_Set_Profile(BME280_PROFILES_enum profile_type, BME280_typedef *dev_bme280)                              
 {
 	switch (profile_type)
 	{
 		case WEATHER_MONITORING:
 
-		dev_bme280->dev_configuration.AddressRegisterCtrlHum = CTRL_HUM_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlHum.osrs_h = OSRS_H_OVERSAMPLING_1;
 	
-		dev_bme280->dev_configuration.AddressRegisterCtrlMeas = CTRL_MEAS_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.mode = FORCED_MODE;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_p = OSRS_P_OVERSAMPLING_1;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_t = OSRS_T_OVERSAMPLING_1;
 	
-		dev_bme280->dev_configuration.AddressRegisterConfig = CONFIG_ADDR;
 		dev_bme280->dev_configuration.bitsDataConfig.spi3w_en = SPI3WIRE_DIS;
 		dev_bme280->dev_configuration.bitsDataConfig.t_sb = T_SB_1000mS;
 		dev_bme280->dev_configuration.bitsDataConfig.filter = FILTER_OFF; 
@@ -116,15 +111,12 @@ static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280)
 		
 		case HUMIDITY_SENSING:
 
-		dev_bme280->dev_configuration.AddressRegisterCtrlHum = CTRL_HUM_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlHum.osrs_h = OSRS_H_OVERSAMPLING_1;
 	
-		dev_bme280->dev_configuration.AddressRegisterCtrlMeas = CTRL_MEAS_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.mode = FORCED_MODE;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_p = OSRS_P_SKIPPED;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_t = OSRS_T_OVERSAMPLING_1;
 	
-		dev_bme280->dev_configuration.AddressRegisterConfig = CONFIG_ADDR;
 		dev_bme280->dev_configuration.bitsDataConfig.spi3w_en = SPI3WIRE_DIS;
 		dev_bme280->dev_configuration.bitsDataConfig.t_sb = T_SB_1000mS;
 		dev_bme280->dev_configuration.bitsDataConfig.filter = FILTER_OFF; 
@@ -133,15 +125,12 @@ static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280)
 		
 		case INDOOR_NAVIGATION:
 
-		dev_bme280->dev_configuration.AddressRegisterCtrlHum = CTRL_HUM_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlHum.osrs_h = OSRS_H_OVERSAMPLING_1;
 	
-		dev_bme280->dev_configuration.AddressRegisterCtrlMeas = CTRL_MEAS_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.mode = NORMAL_MODE;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_p = OSRS_P_OVERSAMPLING_16;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_t = OSRS_T_OVERSAMPLING_2;
 	
-		dev_bme280->dev_configuration.AddressRegisterConfig = CONFIG_ADDR;
 		dev_bme280->dev_configuration.bitsDataConfig.spi3w_en = SPI3WIRE_DIS;
 		dev_bme280->dev_configuration.bitsDataConfig.t_sb = T_SB_500mS;
 		dev_bme280->dev_configuration.bitsDataConfig.filter = FILTER_COEFF16; 
@@ -150,15 +139,12 @@ static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280)
 		
 		case GAMING:
 
-		dev_bme280->dev_configuration.AddressRegisterCtrlHum = CTRL_HUM_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlHum.osrs_h = OSRS_H_SKIPPED;
 	
-		dev_bme280->dev_configuration.AddressRegisterCtrlMeas = CTRL_MEAS_ADDR;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.mode = NORMAL_MODE;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_p = OSRS_P_OVERSAMPLING_4;
 		dev_bme280->dev_configuration.bitsDataCtrlMeas.osrs_t = OSRS_T_OVERSAMPLING_1;
 	
-		dev_bme280->dev_configuration.AddressRegisterConfig = CONFIG_ADDR;
 		dev_bme280->dev_configuration.bitsDataConfig.spi3w_en = SPI3WIRE_DIS;
 		dev_bme280->dev_configuration.bitsDataConfig.t_sb = T_SB_500mS;
 		dev_bme280->dev_configuration.bitsDataConfig.filter = FILTER_COEFF16; 
@@ -168,11 +154,11 @@ static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280)
 		default: break;
 	}
 	
-	dev_bme280->write_data_i2c(dev_bme280->dev_address, CTRL_HUM_ADDR, &dev_bme280->dev_configuration.DataCtrlHum, sizeof(dev_bme280->dev_configuration.DataCtrlHum));
+	dev_bme280->write_data_i2c(dev_bme280->dev_address, CTRL_HUM_ADDR, 1, &dev_bme280->dev_configuration.DataCtrlHum, sizeof(dev_bme280->dev_configuration.DataCtrlHum));
 	dev_bme280->delay(1);
-	dev_bme280->write_data_i2c(dev_bme280->dev_address, CTRL_MEAS_ADDR, &dev_bme280->dev_configuration.DataCtrlMeas, sizeof(dev_bme280->dev_configuration.DataCtrlMeas));
+	dev_bme280->write_data_i2c(dev_bme280->dev_address, CTRL_MEAS_ADDR, 1, &dev_bme280->dev_configuration.DataCtrlMeas, sizeof(dev_bme280->dev_configuration.DataCtrlMeas));
 	dev_bme280->delay(1);
-	dev_bme280->write_data_i2c(dev_bme280->dev_address, CONFIG_ADDR, &dev_bme280->dev_configuration.DataConfig, sizeof(dev_bme280->dev_configuration.DataConfig));
+	dev_bme280->write_data_i2c(dev_bme280->dev_address, CONFIG_ADDR, 1, &dev_bme280->dev_configuration.DataConfig, sizeof(dev_bme280->dev_configuration.DataConfig));
 	dev_bme280->delay(1);
  
 }
@@ -186,7 +172,7 @@ static void setProfile(PROFILES_enum profile_type, BME280_typedef *dev_bme280)
  ** Data compensation formula/algoritm taken from www.bosch-sensortec.com
  **
  **/
-static int32_t BME280TemperatureConv(BME280_typedef *dev_bme280)                              
+static int32_t BME280_Temperature_Conv(BME280_typedef *dev_bme280)                              
 { 
 	int32_t var1, var2, T, T_min = -4000, T_max = 8500;
 	uint32_t adc_T;
@@ -223,7 +209,7 @@ static int32_t BME280TemperatureConv(BME280_typedef *dev_bme280)
  ** Data compensation formula/algoritm taken from www.bosch-sensortec.com
  **
  **/
-static uint32_t BME280HumidityConv(BME280_typedef *dev_bme280)                              
+static uint32_t BME280_Humidity_Conv(BME280_typedef *dev_bme280)                              
 {
 	int32_t  var1, var2, var3, var4, var5;
 	int16_t  dig_H2, dig_H4, dig_H5, dig_H6;
@@ -268,7 +254,7 @@ static uint32_t BME280HumidityConv(BME280_typedef *dev_bme280)
  **
  **/
 
-static uint32_t BME280PressureConv(BME280_typedef *dev_bme280)                              
+static uint32_t BME280_Pressure_Conv(BME280_typedef *dev_bme280)                              
 {
 	int32_t var1, var2, var3, var4;  
 	int16_t dig_P2, dig_P3, dig_P4, dig_P5, dig_P6, dig_P7, dig_P8, dig_P9;

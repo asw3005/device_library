@@ -17,7 +17,6 @@ static void readTemperatureHTU21DTask(void)
 	{
 		TempHumStructHTU21D_typedef *device_compinsated_data_htu21d; 
 		xSemaphoreTake(mutI2C1Handle, portMAX_DELAY);	
-		selectChannel(CHANNEL_BME280, &pca9546_instance0);
 		getHTU21DTemp(&dev_htu21d_inst0);
 		device_compinsated_data_htu21d = getHTU21DHum(&dev_htu21d_inst0);
 		xSemaphoreGive(mutI2C1Handle);
@@ -31,41 +30,28 @@ static void readTemperatureHTU21DTask(void)
 #include "stm32l4xx_hal.h"
 
 /**
- ** @brief External variable
- **/
-extern I2C_HandleTypeDef hi2c1;
-
-/**
- ** @brief Drive reset pin
- **/
-void driveResetPin(uint8_t drive_reset_pin)
-{
-	if (drive_reset_pin)
-		HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
-	else HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-}
-
-/**
  ** @brief Read i2c function for external device library 
  **/
-int8_t si7021_i2c_read(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size)
+int8_t user_i2c_read(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size)
 {
 	int8_t rslt = 1; /* Return 0 for Success, non-zero for failure */
-	
-	rslt = HAL_I2C_Mem_Read_IT(&hi2c1, DevAddress, MemAddress, MemAddSize, pData, Size);
 
+	//HAL_Delay(2);
+	rslt = HAL_I2C_Mem_Read_IT(&hi2c1, DevAddress, MemAddress, MemAddSize, pData, Size);
+	HAL_Delay(1);
 	return rslt = 0;
 }
 
 /**
  ** @brief Write i2c function for external device library 
  **/
-int8_t si7021_i2c_write(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size)
+int8_t user_i2c_write(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size)
 {
 	int8_t rslt = 1; /* Return 0 for Success, non-zero for failure */
 
+	//HAL_Delay(2);
 	rslt = HAL_I2C_Mem_Write_IT(&hi2c1, DevAddress, MemAddress, MemAddSize, pData, Size);
-
+	HAL_Delay(1);
 	return rslt = 0;
 }
 
@@ -76,7 +62,8 @@ int8_t user_i2c_write_alt(uint8_t dev_addr, uint8_t data, uint16_t len)
 {
 	int8_t rslt = 1; /* Return 0 for Success, non-zero for failure */
 	
-	uint8_t tmp_data = data;
+	static uint8_t tmp_data;
+	tmp_data = data;
 	rslt = HAL_I2C_Master_Transmit_IT(&hi2c1, dev_addr, &tmp_data, len);
 	
 	return rslt = 0;

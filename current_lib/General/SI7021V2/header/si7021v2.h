@@ -10,8 +10,6 @@
  **/
 #define ADDR_SI7021_SHIFTED             0x80    //7 bit MSB 0x76 (address) + 1 bit LSB 0x00 (read/write)
 #define ADDR_SI7021						0x40	//It's not shifted address
-#define WRITE_MODE						0x00	//			
-#define READ_MODE						0x01	//
 
 /**
  ** @brief Internal command SI7021
@@ -35,7 +33,7 @@ static enum {
 	READ_FIRMWARE_REVISION_PART1			= 0x84,
 	READ_FIRMWARE_REVISION_PART2			= 0xB8,
 
-} InternalCommandSI7021_enum;
+} SI7021_InternalCommand_enum;
 
 /**
  ** @brief Device specific function type
@@ -55,13 +53,29 @@ typedef void(*si7021_delay_fptr)(uint32_t period);
  ** @brief TempHumPress struct
  **/
 typedef struct {
-	uint64_t SerialNumber;
+	union
+	{
+		uint64_t SerialNumber;
+		struct
+		{
+			uint8_t SNB_0;
+			uint8_t SNB_1;
+			uint8_t SNB_2;
+			uint8_t SNB_3;
+			uint8_t SNA_0;
+			uint8_t SNA_1;
+			uint8_t SNA_2;
+			uint8_t SNA_3;
+
+		} ElementsSerialNumber;
+	};
+	uint8_t Dev_ID;
 	uint8_t FirmwareRevision;
 	int32_t TemperatureC;
 	int32_t TemperatureF;
 	uint32_t HumidityRH;
 	
-} TempHumStructSI7021_typedef;
+} SI7021_TempHumStruct_typedef;
 
 /**
  ** @brief Configuration struct
@@ -91,7 +105,7 @@ typedef struct {
 		}bitsHeaterControlRegister;
 	};
 		
-} ConfigStructSI7021_typedef;
+} SI7021_ConfigStruct_typedef;
 
 /**
  ** @brief Electronic serial number struct receive
@@ -112,7 +126,7 @@ typedef struct {
 	uint8_t SNB_0;
 	uint8_t SNB_1_0_CRC;
 	
-} SerialNumberStructReceive_typedef;
+} SI7021_SerialNumberStructReceive_typedef;
 
 /**
  ** @brief Data receive parameter
@@ -125,7 +139,7 @@ typedef struct {
 	uint8_t HumidityLSB;
 	uint8_t HumidityCRC8;
 	
-} DataReceiveStructSI7021_typedef;
+} SI7021_DataReceiveStruct_typedef;
 
 /**
  ** @brief BME280 instance struct
@@ -133,15 +147,24 @@ typedef struct {
 typedef struct {
 	
 	uint8_t dev_address;
-	uint8_t dev_id;
-	uint16_t dev_twin_cmd;
-	ConfigStructSI7021_typedef dev_configuration;
-	SerialNumberStructReceive_typedef dev_electronic_serial_number;
-	DataReceiveStructSI7021_typedef dev_uncompensated_data;
+	union
+	{
+		uint16_t dev_twin_cmd;
+		struct
+		{
+			uint8_t dev_twin_cmd_lsb;
+			uint8_t dev_twin_cmd_msb;
+			
+		} dev_twin_cmd_elements;
+	};
+	
+	SI7021_ConfigStruct_typedef dev_configuration;
+	SI7021_SerialNumberStructReceive_typedef dev_electronic_serial_number;
+	SI7021_DataReceiveStruct_typedef dev_uncompensated_data;
 	si7021_communication_fptr read_data_i2c;
 	si7021_communication_fptr write_data_i2c;
 	si7021_delay_fptr delay;	
-	TempHumStructSI7021_typedef dev_compensated_data;
+	SI7021_TempHumStruct_typedef dev_compensated_data;
 	
 	
 } SI7021_typedef;
@@ -151,13 +174,13 @@ typedef struct {
  **/
 
 //Get temperature
-TempHumStructSI7021_typedef* getSI7021Temp(SI7021_typedef *dev_si7021);	
+SI7021_TempHumStruct_typedef* SI7021_Get_Temp(SI7021_typedef *dev_si7021);	
 //Get humidity
-TempHumStructSI7021_typedef* getSI7021Hum(SI7021_typedef *dev_si7021); 		
+SI7021_TempHumStruct_typedef* SI7021_Get_Hum(SI7021_typedef *dev_si7021); 		
 //Set configuration register
-void setConfugurationSI7021(uint8_t measurement_resolution, uint8_t heater_en, uint8_t heater_value, SI7021_typedef *dev_si7021); 
+void SI7021_Set_Confuguration(uint8_t measurement_resolution, uint8_t heater_en, uint8_t heater_value, SI7021_typedef *dev_si7021); 
 //Get firmware revision
-void getSI7021ElectronicSerialNumber(SI7021_typedef *dev_si7021);
+void SI7021_Get_Electronic_Serial_Number(SI7021_typedef *dev_si7021);
 
 
 

@@ -6,10 +6,6 @@
 //#define BME280_H_
 
 #include "stm32l4xx_hal.h"
-/**
- ** @brief Number device profiles UNUSED
- **/
-//#define NUMBER_DEVICE_PROFILES			0x03
 
 /**
  ** @brief Device address
@@ -45,6 +41,29 @@
 #define TEMP_XLSB_ADDR                  0xFC
 #define HUM_MSB_ADDR                    0xFD
 #define HUM_LSB_ADDR                    0xFE
+
+//enum address_reg
+//{
+//	CALIB00_START_ADDR     =  0x88,
+//	CALIB25_FINISH_ADDR    =  0xA1,
+//	ID_ADDR                =  0xD0,
+//	RESET_ADDR             =  0xE0,
+//	CALIB26_START_ADDR     =  0xE1,
+//	CALIB41_FINISH_ADDR    =  0xF0,
+//	CTRL_HUM_ADDR          =  0xF2,
+//	STATUS_ADDR            =  0xF3,
+//	CTRL_MEAS_ADDR         =  0xF4,
+//	CONFIG_ADDR            =  0xF5,
+//	PRESS_MSB_ADDR         =  0xF7,
+//	PRESS_LSB_ADDR         =  0xF8,
+//	PRESS_XLSB_ADDR        =  0xF9,
+//	TEMP_MSB_ADDR          =  0xFA,
+//	TEMP_LSB_ADDR          =  0xFB,
+//	TEMP_XLSB_ADDR         =  0xFC,
+//	HUM_MSB_ADDR           =  0xFD,
+//	HUM_LSB_ADDR           =  0xFE,     
+//	
+//} /*address_registers_enum = CALIB00_START_ADDR*/;
 
 /**
  ** @brief Software reset
@@ -117,7 +136,7 @@
  ** @return Result of API execution status
  ** @retval zero -> Success / +ve value -> Warning / -ve value -> Error
  **/
-typedef int8_t(*bme280_communication_fptr)(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
+typedef int8_t(*bme280_communication_fptr)(uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size);
 typedef void(*bme280_delay_fptr)(uint32_t period);
 
 /**
@@ -131,7 +150,7 @@ typedef enum
 	GAMING,
 	CUSTOM_PROFILE_0,
 	
-} PROFILES_enum;
+} BME280_PROFILES_enum;
 
 /**
  ** @brief Compensated data
@@ -143,13 +162,13 @@ typedef struct {
 	uint32_t PressurePa;
 	uint32_t PressuremmHg;
 	
-} TempHumPressStruct_typedef;
+} BME280_TempHumPressStruct_typedef;
 
 /**
  ** @brief Configuration registers
  **/
 typedef struct {
-	uint8_t AddressRegisterCtrlHum;
+
 	union {	
 		uint8_t DataCtrlHum;
 		struct {
@@ -157,7 +176,7 @@ typedef struct {
 			uint8_t   RESERVED_0		: 5;			
 		} bitsDataCtrlHum;				
 	};
-	uint8_t AddressRegisterCtrlMeas;
+	
 	union {
 		uint8_t DataCtrlMeas;
 		struct {
@@ -166,7 +185,7 @@ typedef struct {
 			uint8_t   osrs_t			: 3; 
 		} bitsDataCtrlMeas;
 	};
-	uint8_t AddressRegisterConfig;
+	
 	union {
 		uint8_t DataConfig;
 		struct {
@@ -177,7 +196,7 @@ typedef struct {
 		} bitsDataConfig;
 	};
 	
-} ConfigStruct_typedef;
+} BME280_ConfigStruct_typedef;
 
 /**
  ** @brief Data receive parametr
@@ -197,14 +216,12 @@ typedef struct {
 	uint8_t	Hum_msb;			                         
 	uint8_t	Hum_lsb;			 
 	
-} DataReceiveStruct_typedef;
+} BME280_DataReceiveStruct_typedef;
 
 /**
  ** @brief Calibration data
  **/
-//typedef struct __attribute__((aligned(1), packed)) {
-#pragma pack(push, 1)
-typedef struct {
+typedef struct __attribute__((aligned(1), packed)) {
 	uint16_t Dig_T1;
 	int16_t Dig_T2;
 	int16_t Dig_T3;
@@ -230,8 +247,8 @@ typedef struct {
 	int8_t Dig_H5_11_4;
 	int8_t Dig_H6;
 	
-} CompensationParameterStorageStruct_typedef;
-#pragma pack(pop)
+} BME280_CalibrationCoefficientsStruct_typedef;
+
 
 /**
  ** @brief BME280 instance struct
@@ -240,13 +257,13 @@ typedef struct {
 	
 	uint8_t dev_address;
 	uint8_t dev_id;
-	ConfigStruct_typedef dev_configuration;
-	DataReceiveStruct_typedef dev_uncompensated_data;
-	CompensationParameterStorageStruct_typedef dev_calibration_data;
+	BME280_ConfigStruct_typedef dev_configuration;
+	BME280_DataReceiveStruct_typedef dev_uncompensated_data;
+	BME280_CalibrationCoefficientsStruct_typedef dev_calibration_data;
 	bme280_communication_fptr read_data_i2c;
 	bme280_communication_fptr write_data_i2c;
 	bme280_delay_fptr delay;	
-	TempHumPressStruct_typedef dev_compensated_data;
+	BME280_TempHumPressStruct_typedef dev_compensated_data;
 	
 	
 } BME280_typedef;
@@ -254,13 +271,13 @@ typedef struct {
 /**
  ** @brief Public function prototype
  **/
-void initDeviceBME280(PROFILES_enum meas_profil, BME280_typedef *dev_bme280);
-TempHumPressStruct_typedef* getBME280DataPressTempHum(BME280_typedef *dev_bme280); 
-void BME280WriteConfig(void); 								  
-void getBME280CalibrationData(BME280_typedef *dev_bme280); 
-void getBME280CalibrationData0(BME280_typedef *dev_bme280); 
-void getBME280CalibrationData1(BME280_typedef *dev_bme280);  
-void getBME280ID(BME280_typedef *dev_bme280); 
+void BME280_Init_Device(BME280_PROFILES_enum meas_profil, BME280_typedef *dev_bme280);
+BME280_TempHumPressStruct_typedef* BME280_Get_Data_Press_Temp_Hum(BME280_typedef *dev_bme280); 
+void BME280_Write_Config(void); 								  
+void BME280_Get_Calibration_Data(BME280_typedef *dev_bme280); 
+void BME280_Get_Calibration_Data0(BME280_typedef *dev_bme280); 
+void BME280_Get_Calibration_Data1(BME280_typedef *dev_bme280);  
+void BME280_GetID(BME280_typedef *dev_bme280); 
  
 //#endif /* BME280_H_ */
 
