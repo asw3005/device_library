@@ -23,16 +23,23 @@ static void BME280_Set_Profile(BME280_PROFILES_enum profile_type, BME280_typedef
 
 /**
  ** @brief Init device  
+ ** 
+ ** @param[in] meas_profile : profile type from the  BME280_PROFILES_enum.
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/
-void BME280_Init_Device(BME280_PROFILES_enum meas_profil, BME280_typedef *dev_bme280)                              
+void BME280_Init_Device(BME280_PROFILES_enum meas_profile, BME280_typedef *dev_bme280)                              
 {	
 	//Config work mode for device
-	BME280_Set_Profile(meas_profil, dev_bme280);	
+	BME280_Set_Profile(meas_profile, dev_bme280);	
 	BME280_Get_Calibration_Data(dev_bme280);
 }
 
 /**
  ** @brief Get T, H, P 
+ ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/				
 BME280_TempHumPressStruct_typedef* BME280_Get_Data_Press_Temp_Hum(BME280_typedef *dev_bme280)                              
 {
@@ -50,6 +57,9 @@ BME280_TempHumPressStruct_typedef* BME280_Get_Data_Press_Temp_Hum(BME280_typedef
 
 /**
  ** @brief Get calibration data full range
+ ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/
 void BME280_Get_Calibration_Data(BME280_typedef *dev_bme280)                              
 {
@@ -60,6 +70,9 @@ void BME280_Get_Calibration_Data(BME280_typedef *dev_bme280)
 
 /**
  ** @brief Get device's id
+ ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/
 void BME280_GetID(BME280_typedef *dev_bme280)                              
 {
@@ -70,6 +83,9 @@ void BME280_GetID(BME280_typedef *dev_bme280)
 
 /**
  ** @brief Get calibration data zero range
+ ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/
 void BME280_GetCalibration_Data0(BME280_typedef *dev_bme280)                              
 {
@@ -80,6 +96,9 @@ void BME280_GetCalibration_Data0(BME280_typedef *dev_bme280)
 
 /**
  ** @brief Get calibration data firt range
+ ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/
 void BME280_Get_Calibration_Data1(BME280_typedef *dev_bme280)                              
 {
@@ -90,6 +109,9 @@ void BME280_Get_Calibration_Data1(BME280_typedef *dev_bme280)
 
 /**
  ** @brief Measurement profiles
+ ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **
  **/
 static void BME280_Set_Profile(BME280_PROFILES_enum profile_type, BME280_typedef *dev_bme280)                              
 {
@@ -166,9 +188,10 @@ static void BME280_Set_Profile(BME280_PROFILES_enum profile_type, BME280_typedef
 /**
  ** @brief Temperature compensation
  ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ **  
  ** Returns temperature in DegC, resolution is 0.01 DegC. Output value of “5123” equals 51.23 DegC.
- ** t_fine carries fine temperature as global value
- **
+ ** t_fine carries fine temperature as global value.
  ** Data compensation formula/algoritm taken from www.bosch-sensortec.com
  **
  **/
@@ -203,9 +226,10 @@ static int32_t BME280_Temperature_Conv(BME280_typedef *dev_bme280)
 /**
  ** @brief Humidity compensation
  ** 
- ** Returns humidity in % RH as unsigned 32 bit integer in Q22.10 format(22 integer and 10 fractional bits).
- ** Output value of “47445” represents 47445/1024 = 46.333 %RH
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
  ** 
+ ** Returns humidity in % RH as unsigned 32 bit integer in Q22.10 format(22 integer and 10 fractional bits).
+ ** Output value of “47445” represents 47445/1024 = 46.333 %RH 
  ** Data compensation formula/algoritm taken from www.bosch-sensortec.com
  **
  **/
@@ -248,8 +272,9 @@ static uint32_t BME280_Humidity_Conv(BME280_typedef *dev_bme280)
 /**
  ** @brief Pressure compensation
  ** 
+ ** @param[in] *dev_bme280 : pointer to instance BME280_typedef.
+ ** 
  ** Returns pressure in Pa as unsigned 32 bit integer. Output value of “96386” equals 96386 Pa = 963.86 hPa
- **
  ** Data compensation formula/algoritm taken from www.bosch-sensortec.com
  **
  **/

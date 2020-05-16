@@ -142,10 +142,11 @@ typedef enum
 /**
  ** @brief Device specific function type
  ** 
- ** @param[in] dev_addr : Device address on the I2C bus
- ** @param[in] reg_addr : Register address for device
- ** @param[in] *data : Pointer on data struct instance
- ** @param[in] len : Length of transmition/reception data
+ ** @param[in] DevAddress : Device address on the I2C bus
+ ** @param[in] MemAddress : Register address for device
+ ** @param[in] MemAddSize : Size address of memory
+ ** @param[in] *pData : Pointer on data struct instance
+ ** @param[in] Size : Size of transmition/reception data
  **
  ** @return Result of API execution status
  ** @retval zero -> Success / +ve value -> Warning / -ve value -> Error

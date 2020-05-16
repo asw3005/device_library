@@ -14,124 +14,149 @@
 #define ADDR_BME280						0x76								//It's not shifted address
 #define ADDR_BME280_SHIFTED_ALTERNATIVE 0xEE                                //
 #define ADDR_BME280_ALTERNATIVE			0x77								//It's not shifted address
-#define WRITE_MODE						0x00								//режим записи в ведомое устройство				
-#define READ_MODE						0x01								//режим чтения из ведомого устройства
-
-#define ADDR_BME280_WRITE_MODE	        (ADDR_BME280 | WRITE_MODE)		    //Отправить адрес ведомого устройства, режим запись 
-#define ADDR_BME280_READ_MODE			(ADDR_BME280 | READ_MODE)			//Отправить адрес ведомого устройства, режим чтение
 
 /**
- ** @brief Internal registers addresses
- **/
-#define CALIB00_START_ADDR              0x88
-#define CALIB25_FINISH_ADDR             0xA1
-#define ID_ADDR                         0xD0
-#define RESET_ADDR                      0xE0
-#define CALIB26_START_ADDR              0xE1
-#define CALIB41_FINISH_ADDR             0xF0
-#define CTRL_HUM_ADDR                   0xF2
-#define STATUS_ADDR                     0xF3
-#define CTRL_MEAS_ADDR                  0xF4
-#define CONFIG_ADDR                     0xF5
-#define PRESS_MSB_ADDR                  0xF7
-#define PRESS_LSB_ADDR                  0xF8
-#define PRESS_XLSB_ADDR                 0xF9
-#define TEMP_MSB_ADDR                   0xFA
-#define TEMP_LSB_ADDR                   0xFB
-#define TEMP_XLSB_ADDR                  0xFC
-#define HUM_MSB_ADDR                    0xFD
-#define HUM_LSB_ADDR                    0xFE
-
-//enum address_reg
-//{
-//	CALIB00_START_ADDR     =  0x88,
-//	CALIB25_FINISH_ADDR    =  0xA1,
-//	ID_ADDR                =  0xD0,
-//	RESET_ADDR             =  0xE0,
-//	CALIB26_START_ADDR     =  0xE1,
-//	CALIB41_FINISH_ADDR    =  0xF0,
-//	CTRL_HUM_ADDR          =  0xF2,
-//	STATUS_ADDR            =  0xF3,
-//	CTRL_MEAS_ADDR         =  0xF4,
-//	CONFIG_ADDR            =  0xF5,
-//	PRESS_MSB_ADDR         =  0xF7,
-//	PRESS_LSB_ADDR         =  0xF8,
-//	PRESS_XLSB_ADDR        =  0xF9,
-//	TEMP_MSB_ADDR          =  0xFA,
-//	TEMP_LSB_ADDR          =  0xFB,
-//	TEMP_XLSB_ADDR         =  0xFC,
-//	HUM_MSB_ADDR           =  0xFD,
-//	HUM_LSB_ADDR           =  0xFE,     
-//	
-//} /*address_registers_enum = CALIB00_START_ADDR*/;
-
-/**
- ** @brief Software reset
+ ** @brief Software reset cmd.
  **/
 #define RESET_STATE                     0xB6
 
 /**
- ** @brief Data aquisition control humidity. Default condition is 0x8000.
+ ** @brief Internal registers addresses
  **/
-//***************************************************************************************************************************************
-//Настройка режима сбора данных о влажности CTRL_HUM (в состоянии SKIPPED влажность имеет значение 0x8000)
-#define OSRS_H_SKIPPED                  0x00
-#define OSRS_H_OVERSAMPLING_1           0x01
-#define OSRS_H_OVERSAMPLING_2           0x02
-#define OSRS_H_OVERSAMPLING_4           0x03
-#define OSRS_H_OVERSAMPLING_8           0x04
-#define OSRS_H_OVERSAMPLING_16          0x05
+typedef enum 
+{
+	///The trimming parameters are programmed into the devices’ non-volatile memory (NVM) during production
+	CALIB00_START_ADDR     =  0x88,
+	CALIB25_FINISH_ADDR    =  0xA1,
+	///Chip identification number chip_id[7:0], which is 0x60.
+	ID_ADDR                =  0xD0,
+	///The “reset” register contains the soft reset word reset[7:0]. If the value 0xB6 is written to the
+	///register, the device is reset. Writing other values than 0xB6 has no effect.
+	RESET_ADDR             =  0xE0,
+	///The trimming parameters are programmed into the devices’ non - volatile memory(NVM) during production
+	CALIB26_START_ADDR     =  0xE1,
+	CALIB41_FINISH_ADDR    =  0xF0,
+	///The “ctrl_hum” register sets the humidity data acquisition options of the device.Changes to this
+	///register only become effective after a write operation to “ctrl_meas”.
+	CTRL_HUM_ADDR          =  0xF2,
+	///The “status” register contains two bits which indicate the status of the device.
+	///Bit 3 "measuring[0]" Automatically set to ‘1’ whenever a conversion is running and back to ‘0’ when the results have been
+	///transferred to the data registers. 
+	///Bit 0 "im_update[0]" Automatically set to ‘1’ when the NVM data are being copied to image registers and back to ‘0’ when the
+	///copying is done. The data are copied at power-on-reset and before every conversion.
+	STATUS_ADDR            =  0xF3,
+	///The “ctrl_meas” register sets the pressure and temperature data acquisition options of the device.
+	///The register needs to be written after changing “ctrl_hum” for the changes to become effective.
+	CTRL_MEAS_ADDR         =  0xF4,
+	///The “config” register sets the rate, filter and interface options of the device. Writes to the “config”
+	///register in normal mode may be ignored.In sleep mode writes are not ignored.
+	CONFIG_ADDR            =  0xF5,
+	///The “press” register contains the raw pressure measurement output data up[19:0].
+	///Contains the MSB part up[19:12] of the raw pressure measurement output data.
+	PRESS_MSB_ADDR         =  0xF7,
+	///Contains the LSB part up[11:4] of the raw pressure measurement output data.
+	PRESS_LSB_ADDR         =  0xF8,
+	///Contains the XLSB part up[3:0] of the raw pressure measurement output data (bit 7, 6, 5, 4). Contents depend on temperature resolution.
+	PRESS_XLSB_ADDR        =  0xF9,
+	///The “temp” register contains the raw temperature measurement output data ut[19:0].
+	///Contains the MSB part ut[19:12] of the raw temperature measurement output data.
+	TEMP_MSB_ADDR          =  0xFA,
+	///Contains the LSB part ut[11:4] of the raw temperature measurement output data.
+	TEMP_LSB_ADDR          =  0xFB,
+	///Contains the XLSB part ut[3:0] of the raw temperature measurement output data (bit 7, 6, 5, 4). Contents depend on pressure resolution.
+	TEMP_XLSB_ADDR         =  0xFC,
+	///The “temp” register contains the raw temperature measurement output data ut[19:0]. 
+	///Contains the MSB part uh[15:8] of the raw humidity measurement output data.
+	HUM_MSB_ADDR           =  0xFD,
+	///Contains the LSB part uh[7:0] of the raw humidity measurement output data.
+	HUM_LSB_ADDR           =  0xFE,     
+	
+} BME280_Addr_Reg_enum;
 
 /**
- ** @brief Data aquisition control temperature, pressure, measurement. Default condition is 0x8000
+ ** @brief Controls oversampling of humidity data.
  **/
-#define OSRS_P_SKIPPED                  0x00
-#define OSRS_P_OVERSAMPLING_1           0x01
-#define OSRS_P_OVERSAMPLING_2           0x02
-#define OSRS_P_OVERSAMPLING_4           0x03
-#define OSRS_P_OVERSAMPLING_8           0x04
-#define OSRS_P_OVERSAMPLING_16          0x05
-
-#define OSRS_T_SKIPPED                  0x00
-#define OSRS_T_OVERSAMPLING_1           0x01
-#define OSRS_T_OVERSAMPLING_2           0x02
-#define OSRS_T_OVERSAMPLING_4           0x03
-#define OSRS_T_OVERSAMPLING_8           0x04
-#define OSRS_T_OVERSAMPLING_16          0x05
-
-#define SLEEP_MODE                      0x00
-#define FORCED_MODE                     0x01
-//#define FORCED_MODE                     0x02
-#define NORMAL_MODE                     0x03
+typedef enum
+{
+	///Skipped (output set to 0x8000).
+	OSRS_H_SKIPPED          =  0x00,
+	OSRS_H_OVERSAMPLING_1   =  0x01,
+	OSRS_H_OVERSAMPLING_2   =  0x02,
+	OSRS_H_OVERSAMPLING_4   =  0x03,
+	OSRS_H_OVERSAMPLING_8   =  0x04,
+	///Value 0x05 or others.
+	OSRS_H_OVERSAMPLING_16  =  0x05,
+	
+} BME280_Ctrl_Hum_enum;
 
 /**
- ** @brief Configuration speed, filter, interface
+ ** @brief Pressure and temperature data acquisition options of the device.
  **/
-#define T_SB_500uS                      0x00
-#define T_SB_62500uS                    0x01
-#define T_SB_125mS                      0x02
-#define T_SB_250mS                      0x03
-#define T_SB_500mS                      0x04
-#define T_SB_1000mS                     0x05
-#define T_SB_10mS                       0x06
-#define T_SB_20mS                       0x07
-
-#define FILTER_OFF                      0x00
-#define FILTER_COEFF2                   0x01
-#define FILTER_COEFF4                   0x02
-#define FILTER_COEFF8                   0x03
-#define FILTER_COEFF16                  0x04
-
-#define SPI3WIRE_EN                     0x01
-#define SPI3WIRE_DIS                    0x00
+typedef enum
+{
+	///Controls oversampling of pressure data.
+	///Skipped (output set to 0x80000).
+	OSRS_P_SKIPPED           =       0x00,
+	OSRS_P_OVERSAMPLING_1    =       0x01,
+	OSRS_P_OVERSAMPLING_2    =       0x02,
+	OSRS_P_OVERSAMPLING_4    =       0x03,
+	OSRS_P_OVERSAMPLING_8    =       0x04,
+	///Value is 0x05 or other.
+	OSRS_P_OVERSAMPLING_16   =       0x05,
+							 			 
+	///Controls oversampling of temperature data.
+	///Skipped (output set to 0x80000).
+	OSRS_T_SKIPPED           =       0x00,
+	OSRS_T_OVERSAMPLING_1    =       0x01,
+	OSRS_T_OVERSAMPLING_2    =       0x02,
+	OSRS_T_OVERSAMPLING_4    =       0x03,
+	OSRS_T_OVERSAMPLING_8    =       0x04,
+	///Value is 0x05 or other.
+	OSRS_T_OVERSAMPLING_16   =       0x05,
+							 			 
+	///Controls the sensor mode of the device.
+	SLEEP_MODE               =       0x00,
+	FORCED_MODE              =       0x01,
+	//FORCED_MODE              =       0x02,
+	NORMAL_MODE              =       0x03,
+	
+} BME280_Ctrl_Meas_enum;
 
 /**
- ** @brief Device specific function type
+ ** @brief Configuration speed, filter and interface options of the device.
+ **/
+typedef enum
+{
+	///Controls inactive duration t standby in normal mode.
+	T_SB_500uS               =       0x00,
+	T_SB_62500uS             =       0x01,
+	T_SB_125mS               =       0x02,
+	T_SB_250mS               =       0x03,
+	T_SB_500mS               =       0x04,
+	T_SB_1000mS              =       0x05,
+	T_SB_10mS                =       0x06,
+	T_SB_20mS                =       0x07,
+							 			 
+	///Controls the time constant of the IIR filter.
+	FILTER_OFF               =       0x00,
+	FILTER_COEFF2            =       0x01,
+	FILTER_COEFF4            =       0x02,
+	FILTER_COEFF8            =       0x03,
+	FILTER_COEFF16           =       0x04,
+							 		
+	///Enables 3-wire SPI.
+	SPI3WIRE_EN              =       0x01,
+	SPI3WIRE_DIS             =       0x00,
+	
+} BME280_Config_enum;
+/**
+ ** @brief Device specific function type.
  ** 
- ** @param[in] dev_addr : Device address on the I2C bus
- ** @param[in] reg_addr : Register address for device
- ** @param[in] *data : Pointer on data struct instance
- ** @param[in] len : Length of transmition/reception data
+ ** @param[in] DevAddress : Device address on the I2C bus
+ ** @param[in] MemAddress : Register address for device
+ ** @param[in] MemAddSize : Size address of memory
+ ** @param[in] *pData : Pointer on data struct instance
+ ** @param[in] Size : Size of transmition/reception data
  **
  ** @return Result of API execution status
  ** @retval zero -> Success / +ve value -> Warning / -ve value -> Error
@@ -140,7 +165,12 @@ typedef int8_t(*bme280_communication_fptr)(uint16_t DevAddress, uint16_t MemAddr
 typedef void(*bme280_delay_fptr)(uint32_t period);
 
 /**
- ** @brief Device measurement profiles
+ ** @brief Device measurement profiles.
+ ** 
+ ** It is recommended medes of operations. See datasheet BME280, page 17.
+ ** Mode "CUSTOM_PROFILE_0" is custom. You need to make settings yourself by 
+ ** adding your configuration to the function BME280_Set_Profile.
+ **
  **/
 typedef enum 
 { 
@@ -153,7 +183,7 @@ typedef enum
 } BME280_PROFILES_enum;
 
 /**
- ** @brief Compensated data
+ ** @brief Compensated data struct.
  **/
 typedef struct {
 	int32_t TemperatureC;
@@ -165,11 +195,13 @@ typedef struct {
 } BME280_TempHumPressStruct_typedef;
 
 /**
- ** @brief Configuration registers
+ ** @brief Configuration registers.
  **/
 typedef struct {
 
 	union {	
+		///Controls oversampling of humidity data.
+		///Look at the BME280_Ctrl_Hum_enum on top.
 		uint8_t DataCtrlHum;
 		struct {
 			uint8_t   osrs_h			: 3;   
@@ -178,20 +210,30 @@ typedef struct {
 	};
 	
 	union {
+		///Pressure and temperature data acquisition options of the device.
+		///Look at the BME280_Ctrl_Meas_enum on top.
 		uint8_t DataCtrlMeas;
 		struct {
+			///Controls the sensor mode of the device.
 			uint8_t   mode				: 2;   
+			///Controls oversampling of pressure data.
 			uint8_t   osrs_p			: 3;
+			///Controls oversampling of temperature data.
 			uint8_t   osrs_t			: 3; 
 		} bitsDataCtrlMeas;
 	};
 	
 	union {
+		///The “config” register sets the rate, filter and interface options of the device.
+		///Look at the BME280_Config_enum on top.
 		uint8_t DataConfig;
 		struct {
+			///Enables 3 - wire SPI interface when set to ‘1’.
 			uint8_t   spi3w_en			: 1;   
 			uint8_t   RESERVED_1		: 1;
+			///Controls the time constant of the IIR filter.
 			uint8_t   filter			: 3;   
+			///Controls inactive duration t standby in normal mode.
 			uint8_t   t_sb				: 3; 
 		} bitsDataConfig;
 	};
@@ -199,7 +241,10 @@ typedef struct {
 } BME280_ConfigStruct_typedef;
 
 /**
- ** @brief Data receive parametr
+ ** @brief Raw data struct.
+ ** 
+ ** Raw data humidity, temperature and pressure. Need compensation to use raw data.
+ **
  **/
 typedef struct {
 	uint8_t	Ctrl_Hum;		                        
@@ -219,7 +264,17 @@ typedef struct {
 } BME280_DataReceiveStruct_typedef;
 
 /**
- ** @brief Calibration data
+ ** @brief Calibration data struct.
+ ** 
+ ** The trimming parameters are programmed into the devices’ non-volatile memory (NVM) during
+ ** production and cannot be altered by the customer. Each compensation word is a 16-bit signed or
+ ** unsigned integer value stored in two’s complement. As the memory is organized into 8-bit words,
+ ** two words must always be combined in order to represent the compensation word. The 8-bit
+ ** registers are named calib00…calib41 and are stored at memory addresses 0x88…0xA1 and
+ ** 0xE1…0xE7. The corresponding compensation words are named dig_T# for temperature
+ ** compensation related values, dig_P# for pressure related values and dig_H# for humidity related
+ ** values.
+ **
  **/
 typedef struct __attribute__((aligned(1), packed)) {
 	uint16_t Dig_T1;
@@ -251,7 +306,7 @@ typedef struct __attribute__((aligned(1), packed)) {
 
 
 /**
- ** @brief BME280 instance struct
+ ** @brief BME280 instance struct.
  **/
 typedef struct {
 	
@@ -264,12 +319,11 @@ typedef struct {
 	bme280_communication_fptr write_data_i2c;
 	bme280_delay_fptr delay;	
 	BME280_TempHumPressStruct_typedef dev_compensated_data;
-	
-	
+		
 } BME280_typedef;
 
 /**
- ** @brief Public function prototype
+ ** @brief Public function prototype.
  **/
 void BME280_Init_Device(BME280_PROFILES_enum meas_profil, BME280_typedef *dev_bme280);
 BME280_TempHumPressStruct_typedef* BME280_Get_Data_Press_Temp_Hum(BME280_typedef *dev_bme280); 
